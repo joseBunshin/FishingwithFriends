@@ -58,6 +58,7 @@ supabase/
     0001_init.sql               schema + RLS for all tables
     0002_storage_policies.sql   private 'catches' bucket policies
     0003_units_and_species.sql  canonical metric + species water_type + seed
+    0004_catch_metadata.sql     catch_and_release + rig columns + view recreate
 docs/
   SUPABASE_SETUP.md             one-pager for backend bootstrap
 ```
@@ -70,11 +71,14 @@ Each feature folder uses a `data / domain / presentation` split as it grows.
 |---|---|
 | Visual system — navy + orange + paper, soft cards, no gradient chrome | ✅ M0/U1 |
 | Bottom-nav — 8 tabs (Home / Catches / Log / Stats / Tourneys / Map / Friends / Me) | ✅ M0/U2 |
-| Home tab — action chips + 4-tile stat grid + Recent Catches placeholder | ✅ M0/U3 |
-| Catch Log — multi-photo, unit toggles, Secret Spot + Catch & Release | ✅ M0/U4 (UI only — persistence in M1) |
+| Home tab — stat tiles + recent catches, derived from real catches | ✅ M0/U3, M1/U5 |
+| Catch Log — multi-photo, unit toggles, Secret Spot + Catch & Release, **persists end-to-end** | ✅ M0/U4 + M1/U2–U4 |
 | Sign-In — Supabase email + password, off-white surface | ✅ M0/U5 |
-| Schema — canonical metric, species water_type, ~30-species seed | ✅ M0/U6 |
-| Trips, activity feed, tournaments, friends, map, stats, PRs | M1–M7 (see `docs/plans/`) |
+| Schema — canonical metric, species water_type, catch metadata, ~30-species seed | ✅ M0/U6 + M1/U1 |
+| Catches grid — photo-first tiles with signed URLs + hero transitions | ✅ M1/U6 |
+| Catch detail — photo carousel, measurement pills, Secret Spot enforcement | ✅ M1/U7 |
+| Friends-only RLS contract proof (gated integration test) | ✅ M1/U8 |
+| Trips, activity feed, tournaments, friends, map, stats, PRs | M2–M7 (see `docs/plans/`) |
 
 ## Design rules
 
@@ -100,6 +104,26 @@ flutter test                          # unit / widget tests
 dart run build_runner build           # codegen for freezed/riverpod
 dart run build_runner watch           # codegen in watch mode
 ```
+
+### Running integration tests
+
+The friends-only RLS suite runs against your dev Supabase project to prove the privacy contract end-to-end. It is gated behind an env var so a default `flutter test` stays unit-only.
+
+```bash
+# bash / zsh
+FWF_INTEGRATION=true flutter test test_integration/friends_only_rls_test.dart
+
+# PowerShell
+$env:FWF_INTEGRATION='true'; flutter test test_integration/friends_only_rls_test.dart
+```
+
+Prerequisites:
+
+- `.env` points at a **dev** Supabase project (never prod — the test creates and deletes rows).
+- Migrations 0001–0004 have run.
+- **Email confirmation is OFF** in Authentication → Providers → Email so the test users (`rls-a@fwf-test.local`, `rls-b@…`, `rls-c@…`) are immediately usable after sign-up.
+
+The suite is idempotent — re-running re-uses the same test users and cleans up its own catches in `tearDownAll`.
 
 ## Contributing
 
