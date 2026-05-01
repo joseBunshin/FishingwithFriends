@@ -11,6 +11,7 @@ import 'package:fishing_with_friends/features/catches/presentation/widgets/unit_
 import 'package:fishing_with_friends/features/trips/data/trips_repository_provider.dart';
 import 'package:fishing_with_friends/features/trips/presentation/active_trip_banner.dart';
 import 'package:fishing_with_friends/features/trips/presentation/start_trip_sheet.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,11 +55,23 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
 
   Future<void> _addPhoto() async {
     final picker = ImagePicker();
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (_) => const _SourcePicker(),
-    );
-    if (source == null) return;
+
+    // Chrome desktop ignores the file-input `capture` attribute, so the
+    // camera option falls through to the standard file picker anyway.
+    // Skip the source sheet on web and go straight to gallery — the user
+    // experience is identical and they don't get the misleading "Take a
+    // photo" tile.
+    final ImageSource? source;
+    if (kIsWeb) {
+      source = ImageSource.gallery;
+    } else {
+      source = await showModalBottomSheet<ImageSource>(
+        context: context,
+        builder: (_) => const _SourcePicker(),
+      );
+      if (source == null) return;
+    }
+
     final file = await picker.pickImage(
       source: source,
       imageQuality: 92,
