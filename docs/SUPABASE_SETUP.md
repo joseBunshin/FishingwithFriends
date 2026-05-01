@@ -24,7 +24,8 @@ In **Database → Extensions**, enable:
 Open **SQL Editor → New query** and run, in order:
 
 1. `supabase/migrations/0001_init.sql` — schema + RLS for every table.
-2. *(After step 4 below)* `supabase/migrations/0002_storage_policies.sql`.
+2. *(After step 4 below)* `supabase/migrations/0002_storage_policies.sql` — private 'catches' bucket policies.
+3. `supabase/migrations/0003_units_and_species.sql` — canonical metric measurements, `species.water_type`, seed list of ~30 freshwater + saltwater species, `catches.conditions` JSONB column for the M6 weather/tide cache.
 
 Or, if you use the Supabase CLI:
 

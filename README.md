@@ -57,31 +57,33 @@ supabase/
   migrations/
     0001_init.sql               schema + RLS for all tables
     0002_storage_policies.sql   private 'catches' bucket policies
+    0003_units_and_species.sql  canonical metric + species water_type + seed
 docs/
   SUPABASE_SETUP.md             one-pager for backend bootstrap
 ```
 
 Each feature folder uses a `data / domain / presentation` split as it grows.
 
-## Feature status
+## Feature status (v1)
 
 | Module | Status |
 |---|---|
-| Auth (email + password) | UI wired, talks to Supabase |
-| Catch logging UI (media-first, Secret Spot, numeric pads) | UI built, persistence pending |
-| Activity feed | placeholder cards |
-| Tournaments | placeholder cards |
-| Friends / search | not started |
-| Notifications center | not started |
-| Live leaderboards (Realtime) | not started |
+| Visual system — navy + orange + paper, soft cards, no gradient chrome | ✅ M0/U1 |
+| Bottom-nav — 8 tabs (Home / Catches / Log / Stats / Tourneys / Map / Friends / Me) | ✅ M0/U2 |
+| Home tab — action chips + 4-tile stat grid + Recent Catches placeholder | ✅ M0/U3 |
+| Catch Log — multi-photo, unit toggles, Secret Spot + Catch & Release | ✅ M0/U4 (UI only — persistence in M1) |
+| Sign-In — Supabase email + password, off-white surface | ✅ M0/U5 |
+| Schema — canonical metric, species water_type, ~30-species seed | ✅ M0/U6 |
+| Trips, activity feed, tournaments, friends, map, stats, PRs | M1–M7 (see `docs/plans/`) |
 
-## Design rules (from spec §5)
+## Design rules
 
-- Minimalist, high-contrast — no background photography; use `AppGradients`.
+- Navy primary + warm orange accent on off-white paper surface (matches Lovable references in `Assests/`).
+- White rounded cards with soft single-shadow. **No gradient chrome.** Gradients are reserved for celebratory moments only — `AppGradients.celebration` for PR takeovers and badge unlocks.
 - Hero image transitions on catch detail.
 - Haptic feedback on save (`HapticFeedback.heavyImpact()`).
 - 56pt minimum tap targets — `AppSpacing.minTap` — for wet/outdoor hands.
-- Bottom-bar nav as the primary navigation surface.
+- 8-tab bottom-nav as the primary navigation surface; Log is a regular tab (not a FAB).
 
 ## Security rules (from spec §6)
 
