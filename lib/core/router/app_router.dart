@@ -3,8 +3,11 @@ import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/features/auth/presentation/sign_in_screen.dart';
 import 'package:fishing_with_friends/features/catches/presentation/catch_log_screen.dart';
 import 'package:fishing_with_friends/features/catches/presentation/catches_screen.dart';
-import 'package:fishing_with_friends/features/profile/presentation/profile_screen.dart';
-import 'package:fishing_with_friends/features/social/presentation/feed_screen.dart';
+import 'package:fishing_with_friends/features/friends/presentation/friends_screen.dart';
+import 'package:fishing_with_friends/features/home/presentation/home_screen.dart';
+import 'package:fishing_with_friends/features/map/presentation/map_screen.dart';
+import 'package:fishing_with_friends/features/me/presentation/me_screen.dart';
+import 'package:fishing_with_friends/features/stats/presentation/stats_screen.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/tournaments_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,11 +17,14 @@ class AppRoutes {
   const AppRoutes._();
 
   static const signIn = '/sign-in';
-  static const feed = '/feed';
+  static const home = '/home';
   static const catches = '/catches';
   static const logCatch = '/log';
-  static const tournaments = '/tournaments';
-  static const profile = '/profile';
+  static const stats = '/stats';
+  static const tourneys = '/tourneys';
+  static const map = '/map';
+  static const friends = '/friends';
+  static const me = '/me';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -26,7 +32,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(notifier.dispose);
 
   return GoRouter(
-    initialLocation: AppRoutes.feed,
+    initialLocation: AppRoutes.home,
     refreshListenable: notifier,
     redirect: (context, state) {
       final user = ref.read(currentUserProvider);
@@ -34,7 +40,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final goingToSignIn = state.matchedLocation == AppRoutes.signIn;
 
       if (!isSignedIn && !goingToSignIn) return AppRoutes.signIn;
-      if (isSignedIn && goingToSignIn) return AppRoutes.feed;
+      if (isSignedIn && goingToSignIn) return AppRoutes.home;
       return null;
     },
     routes: [
@@ -50,20 +56,32 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) => AppShell(child: child),
         routes: [
           GoRoute(
-            path: AppRoutes.feed,
-            builder: (_, __) => const FeedScreen(),
+            path: AppRoutes.home,
+            builder: (_, __) => const HomeScreen(),
           ),
           GoRoute(
             path: AppRoutes.catches,
             builder: (_, __) => const CatchesScreen(),
           ),
           GoRoute(
-            path: AppRoutes.tournaments,
+            path: AppRoutes.stats,
+            builder: (_, __) => const StatsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.tourneys,
             builder: (_, __) => const TournamentsScreen(),
           ),
           GoRoute(
-            path: AppRoutes.profile,
-            builder: (_, __) => const ProfileScreen(),
+            path: AppRoutes.map,
+            builder: (_, __) => const MapScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.friends,
+            builder: (_, __) => const FriendsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.me,
+            builder: (_, __) => const MeScreen(),
           ),
         ],
       ),

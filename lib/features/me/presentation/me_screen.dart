@@ -3,8 +3,8 @@ import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({super.key});
+class MeScreen extends ConsumerWidget {
+  const MeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -12,10 +12,9 @@ class ProfileScreen extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: const Text('Me')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xxxl * 2),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           Center(
             child: Column(
@@ -26,8 +25,15 @@ class ProfileScreen extends ConsumerWidget {
                   child: Icon(Icons.person, size: 48, color: scheme.primary),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                Text(user?.email ?? 'Signed out',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  user?.email ?? 'Signed out',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  '@silentfisher409',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ],
             ),
           ),
@@ -36,8 +42,16 @@ class ProfileScreen extends ConsumerWidget {
             child: Column(
               children: [
                 const ListTile(
-                  leading: Icon(Icons.people_outline),
-                  title: Text('Friends'),
+                  leading: Icon(Icons.workspace_premium_outlined),
+                  title: Text('Personal Records'),
+                  subtitle: Text('Arrives in M5'),
+                  trailing: Icon(Icons.chevron_right),
+                ),
+                const Divider(height: 1),
+                const ListTile(
+                  leading: Icon(Icons.military_tech_outlined),
+                  title: Text('Badges'),
+                  subtitle: Text('Arrives in M5'),
                   trailing: Icon(Icons.chevron_right),
                 ),
                 const Divider(height: 1),
@@ -47,10 +61,18 @@ class ProfileScreen extends ConsumerWidget {
                   trailing: Icon(Icons.chevron_right),
                 ),
                 const Divider(height: 1),
+                const ListTile(
+                  leading: Icon(Icons.settings_outlined),
+                  title: Text('Settings'),
+                  trailing: Icon(Icons.chevron_right),
+                ),
+                const Divider(height: 1),
                 ListTile(
                   leading: Icon(Icons.logout, color: scheme.error),
-                  title: Text('Sign out',
-                      style: TextStyle(color: scheme.error)),
+                  title: Text(
+                    'Sign out',
+                    style: TextStyle(color: scheme.error),
+                  ),
                   onTap: () =>
                       ref.read(supabaseClientProvider).auth.signOut(),
                 ),
