@@ -28,6 +28,9 @@ Open **SQL Editor → New query** and run, in order:
 3. `supabase/migrations/0003_units_and_species.sql` — canonical metric measurements, `species.water_type`, seed list of ~30 freshwater + saltwater species, `catches.conditions` JSONB column for the M6 weather/tide cache.
 4. `supabase/migrations/0004_catch_metadata.sql` — `catch_and_release` + `rig` columns + view recreate.
 5. `supabase/migrations/0005_trips_and_social.sql` — `trips`, `trip_participants`, `feed_reactions`, `comments` tables, `catches.trip_id` FK, RLS policies, and four notification triggers (friend request / friend accepted / reaction / comment).
+6. `supabase/migrations/0006_tournaments_realtime.sql` — `tournaments.join_code` + `is_closed`, `tournament_entries` snapshot columns + status, `tournament_side_pots` table, `tournament_chat_messages` table, RLS policies, and three notification triggers (tournament invite / member resolved / entry resolved).
+
+**Realtime:** After running 0006, enable Realtime for `tournament_entries` and `tournament_chat_messages` in **Database → Replication** so the live leaderboard + chat update without a refresh.
 
 Or, if you use the Supabase CLI:
 

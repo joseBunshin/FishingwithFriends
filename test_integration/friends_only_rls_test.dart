@@ -106,6 +106,16 @@ void main() {
             // Row already gone — ignore.
           }
         }
+        for (final id in _createdTournamentIds) {
+          try {
+            await Supabase.instance.client
+                .from('tournaments')
+                .delete()
+                .eq('id', id);
+          } on PostgrestException {
+            // Row already gone — ignore.
+          }
+        }
       } finally {
         await Supabase.instance.client.auth.signOut();
       }
@@ -288,8 +298,136 @@ void main() {
         throwsA(isA<PostgrestException>()),
       );
     });
+
+    // ─────────────── M3 / U9: tournament-context visibility ────────────────
+
+    test('R10/R11: non-member B cannot read tournament chat', () async {
+      // A creates a tournament, accepts B as a member? No — B is NOT a
+      // friend of A and we want B to *not* be a member here. This test
+      // confirms that strangers can't read chat for a tournament they're
+      // not in.
+      await _signIn(_emailA);
+      final tournamentId = await _insertTournamentForA();
+      _createdTournamentIds.add(tournamentId);
+      // Author a chat message as A (creator can chat).
+      await Supabase.instance.client.from('tournament_chat_messages').insert({
+        'tournament_id': tournamentId,
+        'author_id': Supabase.instance.client.auth.currentUser!.id,
+        'body': 'opening message',
+      });
+
+      // Stranger B reads chat → zero rows.
+      await _signIn(_emailB);
+      final rows = await Supabase.instance.client
+          .from('tournament_chat_messages')
+          .select()
+          .eq('tournament_id', tournamentId);
+      expect(rows, isEmpty);
+    });
+
+    test(
+        'R11: non-friend tournament fellow can read entries via tournament '
+        'context (the catches row stays unreadable)', () async {
+      // Set up: A creates tournament, accepts B as a member (B is NOT a
+      // friend). A submits an entry (snapshot). B can read the entry
+      // (denormalized snapshot fields). B still cannot read the
+      // underlying catches row directly (friends-only RLS holds).
+      await _signIn(_emailA);
+      final tournamentId = await _insertTournamentForA();
+      _createdTournamentIds.add(tournamentId);
+      final aUid = Supabase.instance.client.auth.currentUser!.id;
+
+      // Find B's uid (sign in once to get it, then back to A).
+      await _signIn(_emailB);
+      final bUid = Supabase.instance.client.auth.currentUser!.id;
+      await _signIn(_emailA);
+      // Insert pending member for B and immediately accept.
+      await Supabase.instance.client.from('tournament_members').insert({
+        'tournament_id': tournamentId,
+        'angler_id': bUid,
+        'status': 'pending',
+      });
+      await Supabase.instance.client
+          .from('tournament_members')
+          .update({'status': 'accepted', 'approved_by': aUid})
+          .eq('tournament_id', tournamentId)
+          .eq('angler_id', bUid);
+
+      // A submits + approves an entry.
+      final catchId = await _insertCatch(
+        speciesLabel: 'Bass',
+        weightKg: 4,
+        secretSpot: false,
+      );
+      _createdCatchIds.add(catchId);
+      final inserted = await Supabase.instance.client
+          .from('tournament_entries')
+          .insert({
+            'tournament_id': tournamentId,
+            'catch_id': catchId,
+            'angler_id': aUid,
+            'status': 'pending',
+            'species_label': 'Bass',
+            'weight_kg': 4,
+          })
+          .select()
+          .single();
+      final entryId = inserted['id'] as String;
+      // Since RLS prevents creator self-approval, simulate the manual
+      // approval by signing in as a different creator-side actor — for
+      // the integration test the approve path is exercised by the
+      // tournaments_repository tests; here we stamp the row directly to
+      // simulate the post-approval state.
+      await Supabase.instance.client
+          .from('tournament_entries')
+          .update({'status': 'approved'})
+          .eq('id', entryId);
+
+      // Member B can read the entry (with snapshot fields).
+      await _signIn(_emailB);
+      final entryRows = await Supabase.instance.client
+          .from('tournament_entries')
+          .select()
+          .eq('id', entryId);
+      expect(entryRows, hasLength(1));
+      expect(entryRows.first['species_label'], 'Bass');
+
+      // B still cannot read the underlying catches row directly.
+      final catchRows = await Supabase.instance.client
+          .from('catches')
+          .select()
+          .eq('id', catchId);
+      expect(catchRows, isEmpty,
+          reason:
+              'friends-only catches RLS must hold — only the entry snapshot '
+              'is visible to non-friend tournament fellows');
+    });
   });
 }
+
+Future<String> _insertTournamentForA() async {
+  final user = Supabase.instance.client.auth.currentUser!;
+  final inserted = await Supabase.instance.client
+      .from('tournaments')
+      .insert({
+        'creator_id': user.id,
+        'name': 'M3 RLS Test',
+        'metric': 'weight',
+        'starts_at': DateTime.now()
+            .subtract(const Duration(hours: 1))
+            .toUtc()
+            .toIso8601String(),
+        'ends_at': DateTime.now()
+            .add(const Duration(hours: 1))
+            .toUtc()
+            .toIso8601String(),
+      })
+      .select()
+      .single();
+  return inserted['id'] as String;
+}
+
+final _createdTournamentIds = <String>{};
 
 // ───────────────────────── helpers ──────────────────────────
 

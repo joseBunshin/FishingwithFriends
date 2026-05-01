@@ -60,6 +60,7 @@ supabase/
     0003_units_and_species.sql  canonical metric + species water_type + seed
     0004_catch_metadata.sql     catch_and_release + rig columns + view recreate
     0005_trips_and_social.sql   trips + reactions + comments + notification triggers
+    0006_tournaments_realtime.sql  tournaments realtime: snapshot entries + chat + side pots
 docs/
   SUPABASE_SETUP.md             one-pager for backend bootstrap
 ```
@@ -78,11 +79,12 @@ Each feature folder uses a `data / domain / presentation` split as it grows.
 | Schema — canonical metric, species water_type, catch metadata, ~30-species seed | ✅ M0/U6 + M1/U1 |
 | Catches grid — photo-first tiles with signed URLs + hero transitions | ✅ M1/U6 |
 | Catch detail — photo carousel, measurement pills, Secret Spot enforcement | ✅ M1/U7 |
-| Friends-only RLS contract proof (gated integration test) | ✅ M1/U8 + M2/U10 (extended for trips, reactions, comments, triggers) |
+| Friends-only RLS contract proof (gated integration test) | ✅ M1/U8 + M2/U10 + M3/U9 (extended for tournament-context visibility) |
 | Trips — start, end, attach catches, /trips/:id detail | ✅ M2/U1–U3 + U7 |
 | Friends — search, request, accept, reject, list | ✅ M2/U4 + U5 |
 | Activity Feed — friends + self, reactions, comments, @mentions | ✅ M2/U6 + U8 + U9 |
-| Tournaments, map, stats, PRs / badges | M3–M5 (see `docs/plans/`) |
+| **Tournaments — create, invite/join-by-code, approve members + entries, realtime leaderboard, chat, side pots** | ✅ M3 |
+| Map, stats, PRs / badges | M4–M5 (see `docs/plans/`) |
 
 ## Design rules
 
