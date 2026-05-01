@@ -31,6 +31,7 @@ Open **SQL Editor → New query** and run, in order:
 6. `supabase/migrations/0006_tournaments_realtime.sql` — `tournaments.join_code` + `is_closed`, `tournament_entries` snapshot columns + status, `tournament_side_pots` table, `tournament_chat_messages` table, RLS policies, and three notification triggers (tournament invite / member resolved / entry resolved).
 7. `supabase/migrations/0007_tournament_rls_recursion_fix.sql` — security-definer helpers (`tournament_creator_id`, `is_accepted_tournament_member`) that break the cross-table RLS infinite-recursion. **Required** — without it tournament reads return `42P17 infinite recursion detected in policy`.
 8. `supabase/migrations/0008_auto_profile_on_signup.sql` — trigger on `auth.users` insert that auto-creates a `public.profiles` row (derived username) plus a one-time backfill for users that signed up before this migration. Without it any insert that FKs to `profiles` fails on a fresh sign-up.
+9. `supabase/migrations/0009_storytelling_schema.sql` — `personal_records`, `badges` (+ 5 seeded definitions), `user_badges` tables with RLS, plus an AFTER INSERT/UPDATE trigger on `catches` that auto-detects new PRs (per-species weight + length) and earned badges. **Required for M5** — without it the celebration screen never fires.
 
 **Realtime:** After running 0006, enable Realtime for `tournament_entries` and `tournament_chat_messages` in **Database → Replication** so the live leaderboard + chat update without a refresh.
 
