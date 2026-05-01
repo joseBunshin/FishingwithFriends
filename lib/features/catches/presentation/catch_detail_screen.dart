@@ -4,6 +4,7 @@ import 'package:fishing_with_friends/features/catches/data/catches_repository_pr
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/catch_photo_carousel.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_list.dart';
+import 'package:fishing_with_friends/features/storytelling/application/share_card_export.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/catch_comparison_line.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/submit_entry_sheet.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +52,7 @@ class _Body extends StatelessWidget {
             onPressed: () => context.pop(),
           ),
           actions: [
+            _ShareAction(catch_: catch_),
             IconButton(
               tooltip: 'Submit to tournament',
               icon: const Icon(Icons.emoji_events_outlined),
@@ -102,6 +104,55 @@ class _Body extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ShareAction extends ConsumerStatefulWidget {
+  const _ShareAction({required this.catch_});
+
+  final Catch catch_;
+
+  @override
+  ConsumerState<_ShareAction> createState() => _ShareActionState();
+}
+
+class _ShareActionState extends ConsumerState<_ShareAction> {
+  bool _busy = false;
+
+  Future<void> _share() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await ref.read(shareCardExporterProvider).exportAndShare(
+            context: context,
+            catch_: widget.catch_,
+          );
+    } on Object catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Couldn't build share card.")),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'Share',
+      icon: _busy
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.white,
+              ),
+            )
+          : const Icon(Icons.ios_share),
+      onPressed: _busy ? null : _share,
     );
   }
 }
