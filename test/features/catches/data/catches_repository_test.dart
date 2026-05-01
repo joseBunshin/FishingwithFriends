@@ -127,6 +127,33 @@ void main() {
       expect(row['catch_and_release'], isFalse);
     });
 
+    test('forwards trip_id to the insert row when input carries one',
+        () async {
+      final input = CatchInput(
+        photos: [XFile('a.jpg')],
+        caughtAt: DateTime.utc(2026, 4, 12, 14),
+        secretSpot: false,
+        catchAndRelease: false,
+        speciesLabel: 'Walleye',
+        tripId: 't-id-123',
+      );
+      await repo.create(input, anglerId: 'angler-1');
+      expect(dataSource.lastInsertedRow!['trip_id'], 't-id-123');
+    });
+
+    test('omits trip_id from the insert row when input has no trip',
+        () async {
+      final input = CatchInput(
+        photos: [XFile('a.jpg')],
+        caughtAt: DateTime.utc(2026, 4, 12, 14),
+        secretSpot: false,
+        catchAndRelease: false,
+        speciesLabel: 'Walleye',
+      );
+      await repo.create(input, anglerId: 'angler-1');
+      expect(dataSource.lastInsertedRow!.containsKey('trip_id'), isFalse);
+    });
+
     test('photo upload failure aborts before any insert is attempted',
         () async {
       storage.throwOnUploadAt = 1;
