@@ -9,6 +9,7 @@ import 'package:fishing_with_friends/features/home/presentation/home_screen.dart
 import 'package:fishing_with_friends/features/map/presentation/map_screen.dart';
 import 'package:fishing_with_friends/features/me/presentation/me_screen.dart';
 import 'package:fishing_with_friends/features/stats/presentation/stats_screen.dart';
+import 'package:fishing_with_friends/features/storytelling/presentation/celebration_screen.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/tournament_detail_screen.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/tournaments_screen.dart';
 import 'package:fishing_with_friends/features/trips/presentation/trip_detail_screen.dart';
@@ -70,6 +71,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/tournaments/:id',
         builder: (_, state) => TournamentDetailScreen(
           tournamentId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/celebrate/:catchId',
+        builder: (_, state) => CelebrationScreen(
+          catchId: state.pathParameters['catchId']!,
         ),
       ),
       ShellRoute(

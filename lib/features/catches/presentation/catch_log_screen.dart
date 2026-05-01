@@ -8,6 +8,7 @@ import 'package:fishing_with_friends/features/catches/domain/catch_input.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/additional_details_section.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/photo_drop_target.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/unit_toggle_field.dart';
+import 'package:fishing_with_friends/features/storytelling/data/storytelling_repository_provider.dart';
 import 'package:fishing_with_friends/features/trips/data/trips_repository_provider.dart';
 import 'package:fishing_with_friends/features/trips/presentation/active_trip_banner.dart';
 import 'package:fishing_with_friends/features/trips/presentation/start_trip_sheet.dart';
@@ -176,6 +177,21 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
     if (saved != null) {
       await HapticFeedback.heavyImpact();
       if (!mounted) return;
+
+      // Best-effort: read the trigger's storytelling output and route to
+      // the celebration screen when something celebratory landed. Any
+      // error here degrades to the catch detail.
+      try {
+        final outcome = await ref.read(saveOutcomeProvider(saved.id).future);
+        if (!mounted) return;
+        if (outcome.isCelebratory) {
+          context.go('/celebrate/${saved.id}');
+          return;
+        }
+      } on Object {
+        // Any failure here degrades to the catch detail — celebration is
+        // best-effort, never blocks the success path.
+      }
       context.go('/catches/${saved.id}');
       return;
     }
