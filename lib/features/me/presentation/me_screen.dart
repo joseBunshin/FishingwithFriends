@@ -1,5 +1,7 @@
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/features/storytelling/presentation/widgets/badge_wall.dart';
+import 'package:fishing_with_friends/features/storytelling/presentation/widgets/streak_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -34,27 +36,17 @@ class MeScreen extends ConsumerWidget {
                   '@silentfisher409',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                const SizedBox(height: AppSpacing.md),
+                const StreakChip(),
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
+          const BadgeWall(),
+          const SizedBox(height: AppSpacing.md),
           Card(
             child: Column(
               children: [
-                const ListTile(
-                  leading: Icon(Icons.workspace_premium_outlined),
-                  title: Text('Personal Records'),
-                  subtitle: Text('Arrives in M5'),
-                  trailing: Icon(Icons.chevron_right),
-                ),
-                const Divider(height: 1),
-                const ListTile(
-                  leading: Icon(Icons.military_tech_outlined),
-                  title: Text('Badges'),
-                  subtitle: Text('Arrives in M5'),
-                  trailing: Icon(Icons.chevron_right),
-                ),
-                const Divider(height: 1),
                 const ListTile(
                   leading: Icon(Icons.notifications_outlined),
                   title: Text('Notifications'),
