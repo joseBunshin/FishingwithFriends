@@ -29,8 +29,12 @@ Open **SQL Editor → New query** and run, in order:
 4. `supabase/migrations/0004_catch_metadata.sql` — `catch_and_release` + `rig` columns + view recreate.
 5. `supabase/migrations/0005_trips_and_social.sql` — `trips`, `trip_participants`, `feed_reactions`, `comments` tables, `catches.trip_id` FK, RLS policies, and four notification triggers (friend request / friend accepted / reaction / comment).
 6. `supabase/migrations/0006_tournaments_realtime.sql` — `tournaments.join_code` + `is_closed`, `tournament_entries` snapshot columns + status, `tournament_side_pots` table, `tournament_chat_messages` table, RLS policies, and three notification triggers (tournament invite / member resolved / entry resolved).
+7. `supabase/migrations/0007_tournament_rls_recursion_fix.sql` — security-definer helpers (`tournament_creator_id`, `is_accepted_tournament_member`) that break the cross-table RLS infinite-recursion. **Required** — without it tournament reads return `42P17 infinite recursion detected in policy`.
+8. `supabase/migrations/0008_auto_profile_on_signup.sql` — trigger on `auth.users` insert that auto-creates a `public.profiles` row (derived username) plus a one-time backfill for users that signed up before this migration. Without it any insert that FKs to `profiles` fails on a fresh sign-up.
 
 **Realtime:** After running 0006, enable Realtime for `tournament_entries` and `tournament_chat_messages` in **Database → Replication** so the live leaderboard + chat update without a refresh.
+
+**M4 introduces no new migrations.** The Catch Map and Stats deepening features are pure read-side against the existing schema. RLS contract from 0001 + the recursion fix in 0007 remain authoritative.
 
 Or, if you use the Supabase CLI:
 

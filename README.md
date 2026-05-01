@@ -61,6 +61,11 @@ supabase/
     0004_catch_metadata.sql     catch_and_release + rig columns + view recreate
     0005_trips_and_social.sql   trips + reactions + comments + notification triggers
     0006_tournaments_realtime.sql  tournaments realtime: snapshot entries + chat + side pots
+    0007_tournament_rls_recursion_fix.sql  security-definer helpers for tournament RLS
+    0008_auto_profile_on_signup.sql  trigger + backfill so auth.users -> public.profiles
+assets/
+  geo/
+    mpa_simplified.geojson      bundled US Marine Protected Area polygons (M4)
 docs/
   SUPABASE_SETUP.md             one-pager for backend bootstrap
 ```
@@ -84,7 +89,11 @@ Each feature folder uses a `data / domain / presentation` split as it grows.
 | Friends — search, request, accept, reject, list | ✅ M2/U4 + U5 |
 | Activity Feed — friends + self, reactions, comments, @mentions | ✅ M2/U6 + U8 + U9 |
 | **Tournaments — create, invite/join-by-code, approve members + entries, realtime leaderboard, chat, side pots** | ✅ M3 |
-| Map, stats, PRs / badges | M4–M5 (see `docs/plans/`) |
+| **Catch Map — flutter_map + OSM, own/friend pins, heatmap toggle, Secret Spot suppression, NOAA MPA awareness** | ✅ M4 |
+| **Stats deepening — time-of-day heatmap, vs-friends comparison, conditions correlation placeholder** | ✅ M4 |
+| PRs / badges, share cards, year-in-review | M5 (see `docs/plans/`) |
+| Offline-first, conditions auto-fill, push notifications | M6 |
+| Onboarding, polish, store submission | M7 |
 
 ## Design rules
 
