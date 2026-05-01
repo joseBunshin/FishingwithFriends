@@ -4,6 +4,7 @@ import 'package:fishing_with_friends/features/catches/data/catches_repository_pr
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/catch_photo_carousel.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_list.dart';
+import 'package:fishing_with_friends/features/storytelling/presentation/widgets/catch_comparison_line.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/submit_entry_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -73,6 +74,8 @@ class _Body extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _Headline(catch_: catch_),
+                const SizedBox(height: AppSpacing.sm),
+                CatchComparisonLine(catchId: catch_.id),
                 const SizedBox(height: AppSpacing.md),
                 _MeasurementRow(catch_: catch_),
                 const SizedBox(height: AppSpacing.lg),
