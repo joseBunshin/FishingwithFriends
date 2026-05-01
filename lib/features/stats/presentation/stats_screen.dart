@@ -1,4 +1,5 @@
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/features/stats/presentation/widgets/conditions_correlation_card.dart';
 import 'package:fishing_with_friends/features/stats/presentation/widgets/hour_heatmap_card.dart';
 import 'package:fishing_with_friends/features/stats/presentation/widgets/vs_friends_card.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,8 @@ class StatsScreen extends ConsumerWidget {
           HourHeatmapCard(),
           SizedBox(height: AppSpacing.md),
           VsFriendsCard(),
+          SizedBox(height: AppSpacing.md),
+          ConditionsCorrelationCard(),
         ],
       ),
     );
