@@ -4,6 +4,7 @@ import 'package:fishing_with_friends/features/storytelling/presentation/widgets/
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/streak_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class MeScreen extends ConsumerWidget {
   const MeScreen({super.key});
@@ -43,6 +44,16 @@ class MeScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
           const BadgeWall(),
+          const SizedBox(height: AppSpacing.md),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.auto_awesome, color: Colors.deepOrange),
+              title: const Text('Year in Review'),
+              subtitle: const Text('Last 365 days as a story'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/year-in-review'),
+            ),
+          ),
           const SizedBox(height: AppSpacing.md),
           Card(
             child: Column(

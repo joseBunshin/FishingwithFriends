@@ -10,6 +10,7 @@ import 'package:fishing_with_friends/features/map/presentation/map_screen.dart';
 import 'package:fishing_with_friends/features/me/presentation/me_screen.dart';
 import 'package:fishing_with_friends/features/stats/presentation/stats_screen.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/celebration_screen.dart';
+import 'package:fishing_with_friends/features/storytelling/presentation/year_in_review_screen.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/tournament_detail_screen.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/tournaments_screen.dart';
 import 'package:fishing_with_friends/features/trips/presentation/trip_detail_screen.dart';
@@ -78,6 +79,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => CelebrationScreen(
           catchId: state.pathParameters['catchId']!,
         ),
+      ),
+      GoRoute(
+        path: '/year-in-review',
+        builder: (_, __) => const YearInReviewScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
