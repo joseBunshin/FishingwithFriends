@@ -20,6 +20,7 @@ class Catch {
     this.longitude,
     this.notes,
     this.rig,
+    this.tripId,
     this.conditions = const {},
   });
 
@@ -36,6 +37,7 @@ class Catch {
   final bool catchAndRelease;
   final String? notes;
   final String? rig;
+  final String? tripId;
   final List<String> photoPaths;
   final Map<String, dynamic> conditions;
   final DateTime createdAt;
@@ -57,6 +59,7 @@ class Catch {
     bool? catchAndRelease,
     String? notes,
     String? rig,
+    String? tripId,
     List<String>? photoPaths,
     Map<String, dynamic>? conditions,
     DateTime? createdAt,
@@ -76,6 +79,7 @@ class Catch {
       catchAndRelease: catchAndRelease ?? this.catchAndRelease,
       notes: notes ?? this.notes,
       rig: rig ?? this.rig,
+      tripId: tripId ?? this.tripId,
       photoPaths: photoPaths ?? this.photoPaths,
       conditions: conditions ?? this.conditions,
       createdAt: createdAt ?? this.createdAt,
@@ -100,6 +104,7 @@ class Catch {
           other.catchAndRelease == catchAndRelease &&
           other.notes == notes &&
           other.rig == rig &&
+          other.tripId == tripId &&
           _listEq(other.photoPaths, photoPaths) &&
           other.createdAt == createdAt &&
           other.updatedAt == updatedAt;
@@ -119,6 +124,7 @@ class Catch {
         catchAndRelease,
         notes,
         rig,
+        tripId,
         Object.hashAll(photoPaths),
         createdAt,
         updatedAt,

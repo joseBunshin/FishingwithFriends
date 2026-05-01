@@ -20,6 +20,7 @@ class CatchInput {
     this.locationLabel,
     this.notes,
     this.rig,
+    this.tripId,
   });
 
   final List<XFile> photos;
@@ -35,6 +36,11 @@ class CatchInput {
   final bool catchAndRelease;
   final String? notes;
   final String? rig;
+
+  /// Optional active-trip id. The catch-log form is stateless about trips —
+  /// the SaveCatchController reads `activeTripProvider` and stamps this
+  /// before handing the input to the repository.
+  final String? tripId;
 
   bool get hasLocation => latitude != null && longitude != null;
 }

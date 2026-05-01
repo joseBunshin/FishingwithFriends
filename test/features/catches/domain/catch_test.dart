@@ -15,6 +15,7 @@ Map<String, dynamic> _row({
   Object? location =
       const {'type': 'Point', 'coordinates': [-75.123, 40.456]},
   List<String> photos = const ['anglerId/catch/0.jpg'],
+  String? tripId,
 }) {
   return {
     'id': id,
@@ -29,6 +30,7 @@ Map<String, dynamic> _row({
     'catch_and_release': catchAndRelease,
     'notes': 'felt good on the line',
     'rig': 'spinnerbait',
+    'trip_id': tripId,
     'photo_paths': photos,
     'conditions': const <String, dynamic>{},
     'created_at': '2026-04-12T10:31:00.000Z',
@@ -76,6 +78,16 @@ void main() {
       expect(c.photoPaths, isEmpty);
     });
 
+    test('round-trips trip_id when present', () {
+      final c = CatchDto.fromRow(_row(tripId: 't-id-123'));
+      expect(c.tripId, 't-id-123');
+    });
+
+    test('trip_id is null when row has no value', () {
+      final c = CatchDto.fromRow(_row());
+      expect(c.tripId, isNull);
+    });
+
     test('decodes WKT-formatted location strings', () {
       final c = CatchDto.fromRow(_row(
         location: 'SRID=4326;POINT(-122.4194 37.7749)',
@@ -120,6 +132,41 @@ void main() {
       expect(row['notes'], 'mangrove edge');
       expect(row['rig'], 'live shrimp');
       expect(row['photo_paths'], ['ang/catch/0.jpg', 'ang/catch/1.jpg']);
+    });
+
+    test('tripId is forwarded into the insert row when set', () {
+      final input = CatchInput(
+        photos: const <XFile>[],
+        caughtAt: DateTime.utc(2026, 4, 12, 14),
+        secretSpot: false,
+        catchAndRelease: false,
+        speciesLabel: 'Bass',
+        tripId: 't-id-123',
+      );
+      final row = CatchDto.toInsertRow(
+        input,
+        catchId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+        anglerId: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+        photoPaths: const [],
+      );
+      expect(row['trip_id'], 't-id-123');
+    });
+
+    test('tripId omitted from the row entirely when null', () {
+      final input = CatchInput(
+        photos: const <XFile>[],
+        caughtAt: DateTime.utc(2026, 4, 12, 14),
+        secretSpot: false,
+        catchAndRelease: false,
+        speciesLabel: 'Bass',
+      );
+      final row = CatchDto.toInsertRow(
+        input,
+        catchId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+        anglerId: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+        photoPaths: const [],
+      );
+      expect(row.containsKey('trip_id'), isFalse);
     });
 
     test('secret_spot=true still serializes location into the row', () {

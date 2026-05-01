@@ -23,6 +23,7 @@ class CatchDto {
       catchAndRelease: (row['catch_and_release'] as bool?) ?? false,
       notes: row['notes'] as String?,
       rig: row['rig'] as String?,
+      tripId: row['trip_id'] as String?,
       photoPaths: List<String>.from(
         (row['photo_paths'] as List<dynamic>? ?? const []).cast<String>(),
       ),
@@ -56,6 +57,7 @@ class CatchDto {
       'catch_and_release': input.catchAndRelease,
       'notes': input.notes,
       'rig': input.rig,
+      if (input.tripId != null) 'trip_id': input.tripId,
       'photo_paths': photoPaths,
     };
   }
