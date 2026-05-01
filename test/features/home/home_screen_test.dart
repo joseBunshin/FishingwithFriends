@@ -1,4 +1,5 @@
 import 'package:fishing_with_friends/core/theme/app_theme.dart';
+import 'package:fishing_with_friends/features/home/data/home_metrics_provider.dart';
 import 'package:fishing_with_friends/features/home/domain/home_metrics.dart';
 import 'package:fishing_with_friends/features/home/presentation/home_screen.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-Widget _wrap(HomeMetrics metrics) {
+Widget _wrap(AsyncValue<HomeMetrics> metrics) {
   final router = GoRouter(
     initialLocation: '/home',
     routes: [
@@ -35,7 +36,7 @@ void main() {
   group('HomeScreen', () {
     testWidgets('empty state shows zeroed tiles + first-catch CTA',
         (tester) async {
-      await tester.pumpWidget(_wrap(const HomeMetrics.empty()));
+      await tester.pumpWidget(_wrap(const AsyncData(HomeMetrics.empty())));
       await tester.pumpAndSettle();
 
       expect(find.text('Total Catches'), findsOneWidget);
@@ -55,7 +56,7 @@ void main() {
         biggestWeightKg: 226.796,
         biggestSpecies: 'Rainbow Trout',
       );
-      await tester.pumpWidget(_wrap(metrics));
+      await tester.pumpWidget(_wrap(const AsyncData(metrics)));
       await tester.pumpAndSettle();
 
       expect(find.text('1'), findsAtLeastNWidgets(2));
@@ -65,7 +66,7 @@ void main() {
     });
 
     testWidgets('first-catch CTA navigates to /log', (tester) async {
-      await tester.pumpWidget(_wrap(const HomeMetrics.empty()));
+      await tester.pumpWidget(_wrap(const AsyncData(HomeMetrics.empty())));
       await tester.pumpAndSettle();
 
       final cta = find.text('Log your first catch');
@@ -75,6 +76,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('log screen'), findsOneWidget);
+    });
+
+    testWidgets('error state shows retry affordance', (tester) async {
+      await tester.pumpWidget(
+        _wrap(AsyncError(Exception('boom'), StackTrace.current)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text("Couldn't load your catches."), findsOneWidget);
+      expect(find.widgetWithText(TextButton, 'Retry'), findsOneWidget);
     });
   });
 }
