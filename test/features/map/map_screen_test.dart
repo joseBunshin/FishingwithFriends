@@ -39,7 +39,7 @@ Widget _harness({
         return initial.when(
           data: (v) => v,
           loading: () => throw UnimplementedError(),
-          error: (e, _) => throw e,
+          error: (e, _) => throw Exception(e.toString()),
         );
       }),
     ],

@@ -1,4 +1,5 @@
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/features/stats/presentation/widgets/hour_heatmap_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,11 +25,7 @@ class StatsScreen extends ConsumerWidget {
             icon: Icons.bar_chart_outlined,
           ),
           SizedBox(height: AppSpacing.md),
-          _StatsPlaceholderCard(
-            title: 'Time-of-day Heatmap',
-            subtitle: 'When you catch the most',
-            icon: Icons.access_time,
-          ),
+          HourHeatmapCard(),
         ],
       ),
     );
