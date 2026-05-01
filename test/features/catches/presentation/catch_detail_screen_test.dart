@@ -1,10 +1,15 @@
 import 'dart:async';
 
+import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_theme.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/data/signed_url_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/catch_detail_screen.dart';
+import 'package:fishing_with_friends/features/feed/data/feed_writers_provider.dart';
+import 'package:fishing_with_friends/features/feed/domain/comment.dart';
+import 'package:fishing_with_friends/features/friends/data/friends_repository.dart';
+import 'package:fishing_with_friends/features/friends/data/friends_repository_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -39,6 +44,7 @@ Catch _c({
 Widget _wrap(AsyncValue<Catch?> result) {
   return ProviderScope(
     overrides: [
+      currentUserProvider.overrideWithValue(null),
       catchByIdProvider('42').overrideWith((ref) {
         return result.when(
           data: Future<Catch?>.value,
@@ -47,6 +53,14 @@ Widget _wrap(AsyncValue<Catch?> result) {
         );
       }),
       signedUrlProvider.overrideWith((ref, path) async => 'https://test/$path'),
+      friendsBundleProvider.overrideWith((ref) async => const FriendsBundle(
+            accepted: [],
+            pendingIncoming: [],
+            pendingOutgoing: [],
+            profilesById: {},
+          )),
+      catchCommentsProvider('42')
+          .overrideWith((ref) async => const <Comment>[]),
     ],
     child: MaterialApp(
       theme: AppTheme.light(),

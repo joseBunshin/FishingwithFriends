@@ -5,6 +5,7 @@ import 'package:fishing_with_friends/features/catches/data/signed_url_provider.d
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/feed/domain/feed_item.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/feed_item_header.dart';
+import 'package:fishing_with_friends/features/feed/presentation/widgets/reaction_strip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,9 +44,11 @@ class FeedItemCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _MetaRow(catch_: item.catch_),
-                  if (item.totalReactions > 0 || item.commentCount > 0) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    _ReactionsAndCommentsRow(item: item),
+                  const SizedBox(height: AppSpacing.sm),
+                  ReactionStrip(item: item),
+                  if (item.commentCount > 0) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    _CommentSummary(item: item),
                   ],
                 ],
               ),
@@ -151,64 +154,24 @@ class _MetaRow extends StatelessWidget {
   }
 }
 
-class _ReactionsAndCommentsRow extends StatelessWidget {
-  const _ReactionsAndCommentsRow({required this.item});
+class _CommentSummary extends StatelessWidget {
+  const _CommentSummary({required this.item});
 
   final FeedItem item;
 
   @override
   Widget build(BuildContext context) {
-    final reactionEmojis = item.reactionCounts.entries
-        .where((e) => e.value > 0)
-        .map((e) => e.key.emoji)
-        .take(3)
-        .join();
     final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        if (item.totalReactions > 0)
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.md),
-            child: Row(
-              children: [
-                Text(reactionEmojis,
-                    style: const TextStyle(fontSize: 14)),
-                const SizedBox(width: AppSpacing.xxs),
-                Text(
-                  '${item.totalReactions}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
-        if (item.commentCount > 0)
-          Row(
-            children: [
-              Icon(Icons.chat_bubble_outline,
-                  size: 14, color: scheme.primary),
-              const SizedBox(width: AppSpacing.xxs),
-              Text(
-                '${item.commentCount}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        const Spacer(),
-        if (item.myReaction != null)
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: 2,
-            ),
-            decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            ),
-            child: Text(
-              '${item.myReaction!.emoji} you',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
+        Icon(Icons.chat_bubble_outline, size: 14, color: scheme.primary),
+        const SizedBox(width: AppSpacing.xxs),
+        Text(
+          item.commentCount == 1
+              ? '1 comment'
+              : '${item.commentCount} comments',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ],
     );
   }

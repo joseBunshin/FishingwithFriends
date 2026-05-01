@@ -3,6 +3,7 @@ import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/catch_photo_carousel.dart';
+import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -73,7 +74,15 @@ class _Body extends StatelessWidget {
                   const SizedBox(height: AppSpacing.md),
                   _NotesBlock(notes: catch_.notes!),
                 ],
-                const SizedBox(height: AppSpacing.xxl),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  'Comments',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                CommentList(catchId: catch_.id),
+                const Divider(),
+                CommentComposer(catchId: catch_.id),
+                const SizedBox(height: AppSpacing.lg),
               ],
             ),
           ),
