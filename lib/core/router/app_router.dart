@@ -1,6 +1,7 @@
 import 'package:fishing_with_friends/core/router/app_shell.dart';
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/features/auth/presentation/sign_in_screen.dart';
+import 'package:fishing_with_friends/features/catches/presentation/catch_detail_screen.dart';
 import 'package:fishing_with_friends/features/catches/presentation/catch_log_screen.dart';
 import 'package:fishing_with_friends/features/catches/presentation/catches_screen.dart';
 import 'package:fishing_with_friends/features/friends/presentation/friends_screen.dart';
@@ -25,6 +26,7 @@ class AppRoutes {
   static const map = '/map';
   static const friends = '/friends';
   static const me = '/me';
+  static const catchDetail = '/catches/:id';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -51,6 +53,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.logCatch,
         builder: (_, __) => const CatchLogScreen(),
+      ),
+      GoRoute(
+        path: '/catches/:id',
+        builder: (_, state) =>
+            CatchDetailScreen(catchId: state.pathParameters['id']!),
       ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
