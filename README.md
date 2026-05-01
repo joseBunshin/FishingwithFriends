@@ -63,6 +63,7 @@ supabase/
     0006_tournaments_realtime.sql  tournaments realtime: snapshot entries + chat + side pots
     0007_tournament_rls_recursion_fix.sql  security-definer helpers for tournament RLS
     0008_auto_profile_on_signup.sql  trigger + backfill so auth.users -> public.profiles
+    0009_storytelling_schema.sql  PRs / badges / user_badges + auto-detect trigger
 assets/
   geo/
     mpa_simplified.geojson      bundled US Marine Protected Area polygons (M4)
@@ -91,8 +92,8 @@ Each feature folder uses a `data / domain / presentation` split as it grows.
 | **Tournaments — create, invite/join-by-code, approve members + entries, realtime leaderboard, chat, side pots** | ✅ M3 |
 | **Catch Map — flutter_map + OSM, own/friend pins, heatmap toggle, Secret Spot suppression, NOAA MPA awareness** | ✅ M4 |
 | **Stats deepening — time-of-day heatmap, vs-friends comparison, conditions correlation placeholder** | ✅ M4 |
-| PRs / badges, share cards, year-in-review | M5 (see `docs/plans/`) |
-| Offline-first, conditions auto-fill, push notifications | M6 |
+| **Storytelling — auto-detected PRs + badges (5 seeded), streaks, catch comparison context, share cards (PNG export), Year-in-Review** | ✅ M5 |
+| Offline-first, conditions auto-fill, push notifications | M6 (see `docs/plans/`) |
 | Onboarding, polish, store submission | M7 |
 
 ## Design rules
