@@ -46,6 +46,7 @@ const _emailC = 'rls-c@$_domain';
 
 /// Tracks ids we created so tearDownAll can clean them up.
 final _createdCatchIds = <String>{};
+final _createdTripIds = <String>{};
 
 void main() {
   group('friends-only RLS contract (FWF_INTEGRATION)', () {
@@ -81,15 +82,24 @@ void main() {
     });
 
     tearDownAll(() async {
-      // Best-effort cleanup. Each user signs in to delete their own rows;
-      // RLS prevents cross-user delete. We only target rows we know we
-      // inserted (tracked via _createdCatchIds).
+      // Best-effort cleanup. Owner deletes their catches + trips; reactions
+      // and comments cascade via on-delete-cascade FKs from catches.
       try {
         await _signIn(_emailA);
         for (final id in _createdCatchIds) {
           try {
             await Supabase.instance.client
                 .from('catches')
+                .delete()
+                .eq('id', id);
+          } on PostgrestException {
+            // Row already gone — ignore.
+          }
+        }
+        for (final id in _createdTripIds) {
+          try {
+            await Supabase.instance.client
+                .from('trips')
                 .delete()
                 .eq('id', id);
           } on PostgrestException {
@@ -177,6 +187,107 @@ void main() {
       expect(rows.first['location'], isNotNull,
           reason: 'Owner always sees their own GPS');
     });
+
+    // ─────────────── M2 / U10: trips + reactions + comments ────────────────
+
+    test("R10/R3: friend C reads A's trip; stranger B sees zero rows",
+        () async {
+      await _signIn(_emailA);
+      final tripId = await _insertTrip(title: 'M2 RLS Test');
+      _createdTripIds.add(tripId);
+
+      await _signIn(_emailC);
+      final cRows = await Supabase.instance.client
+          .from('trips')
+          .select()
+          .eq('id', tripId);
+      expect(cRows, hasLength(1));
+
+      await _signIn(_emailB);
+      final bRows = await Supabase.instance.client
+          .from('trips')
+          .select()
+          .eq('id', tripId);
+      expect(bRows, isEmpty);
+    });
+
+    test("R10/R7: friend C inserts a reaction on A's catch; "
+        'stranger B is denied', () async {
+      await _signIn(_emailA);
+      final catchId = await _insertCatch(
+        speciesLabel: 'Largemouth Bass',
+        weightKg: 2,
+        secretSpot: false,
+      );
+      _createdCatchIds.add(catchId);
+      final aId = Supabase.instance.client.auth.currentUser!.id;
+
+      // Friend C reacts → succeeds.
+      await _signIn(_emailC);
+      await Supabase.instance.client.from('feed_reactions').upsert({
+        'catch_id': catchId,
+        'user_id': Supabase.instance.client.auth.currentUser!.id,
+        'kind': 'fire',
+      });
+
+      // R9: trigger writes a notifications row for catch owner.
+      await _signIn(_emailA);
+      final notif = await Supabase.instance.client
+          .from('notifications')
+          .select()
+          .eq('recipient_id', aId)
+          .eq('kind', 'reaction')
+          .order('created_at', ascending: false)
+          .limit(1);
+      expect(notif, isNotEmpty,
+          reason: 'reaction trigger should have written a notification');
+
+      // Stranger B reacts → blocked by RLS.
+      await _signIn(_emailB);
+      await expectLater(
+        Supabase.instance.client.from('feed_reactions').upsert({
+          'catch_id': catchId,
+          'user_id': Supabase.instance.client.auth.currentUser!.id,
+          'kind': 'rod',
+        }),
+        throwsA(isA<PostgrestException>()),
+      );
+    });
+
+    test("R10/R8: friend C comments on A's catch; stranger B is denied",
+        () async {
+      await _signIn(_emailA);
+      final catchId = await _insertCatch(
+        speciesLabel: 'Walleye',
+        weightKg: 1.5,
+        secretSpot: false,
+      );
+      _createdCatchIds.add(catchId);
+
+      // Friend C comments → succeeds.
+      await _signIn(_emailC);
+      final inserted = await Supabase.instance.client
+          .from('comments')
+          .insert({
+            'catch_id': catchId,
+            'author_id': Supabase.instance.client.auth.currentUser!.id,
+            'body': 'great fish @silentfisher',
+          })
+          .select()
+          .single();
+      expect(inserted['body'], contains('great fish'));
+
+      // Stranger B comments → blocked.
+      await _signIn(_emailB);
+      await expectLater(
+        Supabase.instance.client.from('comments').insert({
+          'catch_id': catchId,
+          'author_id': Supabase.instance.client.auth.currentUser!.id,
+          'body': 'sneaky',
+        }),
+        throwsA(isA<PostgrestException>()),
+      );
+    });
   });
 }
 
@@ -244,6 +355,27 @@ Future<void> _deleteFriendshipIfAny({
         'and(requester_id.eq.$a,addressee_id.eq.$b),'
         'and(requester_id.eq.$b,addressee_id.eq.$a)',
       );
+}
+
+Future<String> _insertTrip({required String title}) async {
+  final user = Supabase.instance.client.auth.currentUser!;
+  // End any active trip first so the partial-unique-index doesn't refuse
+  // a fresh insert across reruns.
+  await Supabase.instance.client
+      .from('trips')
+      .update({'is_active': false})
+      .eq('angler_id', user.id)
+      .eq('is_active', true);
+  final inserted = await Supabase.instance.client
+      .from('trips')
+      .insert({
+        'angler_id': user.id,
+        'title': title,
+        'is_active': true,
+      })
+      .select()
+      .single();
+  return inserted['id'] as String;
 }
 
 Future<String> _insertCatch({

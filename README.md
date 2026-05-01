@@ -59,6 +59,7 @@ supabase/
     0002_storage_policies.sql   private 'catches' bucket policies
     0003_units_and_species.sql  canonical metric + species water_type + seed
     0004_catch_metadata.sql     catch_and_release + rig columns + view recreate
+    0005_trips_and_social.sql   trips + reactions + comments + notification triggers
 docs/
   SUPABASE_SETUP.md             one-pager for backend bootstrap
 ```
@@ -77,8 +78,11 @@ Each feature folder uses a `data / domain / presentation` split as it grows.
 | Schema — canonical metric, species water_type, catch metadata, ~30-species seed | ✅ M0/U6 + M1/U1 |
 | Catches grid — photo-first tiles with signed URLs + hero transitions | ✅ M1/U6 |
 | Catch detail — photo carousel, measurement pills, Secret Spot enforcement | ✅ M1/U7 |
-| Friends-only RLS contract proof (gated integration test) | ✅ M1/U8 |
-| Trips, activity feed, tournaments, friends, map, stats, PRs | M2–M7 (see `docs/plans/`) |
+| Friends-only RLS contract proof (gated integration test) | ✅ M1/U8 + M2/U10 (extended for trips, reactions, comments, triggers) |
+| Trips — start, end, attach catches, /trips/:id detail | ✅ M2/U1–U3 + U7 |
+| Friends — search, request, accept, reject, list | ✅ M2/U4 + U5 |
+| Activity Feed — friends + self, reactions, comments, @mentions | ✅ M2/U6 + U8 + U9 |
+| Tournaments, map, stats, PRs / badges | M3–M5 (see `docs/plans/`) |
 
 ## Design rules
 
