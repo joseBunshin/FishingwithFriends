@@ -120,12 +120,13 @@ class _UsernameCard extends StatelessWidget {
                 ],
               ),
             ),
-            OutlinedButton.icon(
+            const SizedBox(width: AppSpacing.sm),
+            IconButton.outlined(
+              tooltip: 'Copy username',
+              icon: const Icon(Icons.content_copy, size: 16),
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: username));
               },
-              icon: const Icon(Icons.content_copy, size: 16),
-              label: const Text('Copy'),
             ),
           ],
         ),
