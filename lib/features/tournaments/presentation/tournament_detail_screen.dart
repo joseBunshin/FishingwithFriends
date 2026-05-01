@@ -6,6 +6,7 @@ import 'package:fishing_with_friends/features/tournaments/data/tournaments_repos
 import 'package:fishing_with_friends/features/tournaments/domain/tournament.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament_entry.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament_phase.dart';
+import 'package:fishing_with_friends/features/tournaments/presentation/submit_entry_sheet.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/widgets/chat_tab.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/widgets/entries_tab.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/widgets/leaderboard_view.dart';
@@ -84,16 +85,10 @@ class _Body extends ConsumerWidget {
                 foregroundColor: AppColors.white,
                 icon: const Icon(Icons.add),
                 label: const Text('Submit catch'),
-                onPressed: () {
-                  // M3/U8 mounts the submit sheet here.
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Submit flow lands in M3/U8 — check the catch detail screen for now.',
-                      ),
-                    ),
-                  );
-                },
+                onPressed: () => SubmitEntrySheet.pickCatch(
+                  context,
+                  tournament: tournament,
+                ),
               )
             : null,
         body: TabBarView(

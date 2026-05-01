@@ -4,6 +4,7 @@ import 'package:fishing_with_friends/features/catches/data/catches_repository_pr
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/catch_photo_carousel.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_list.dart';
+import 'package:fishing_with_friends/features/tournaments/presentation/submit_entry_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -48,6 +49,16 @@ class _Body extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
           ),
+          actions: [
+            IconButton(
+              tooltip: 'Submit to tournament',
+              icon: const Icon(Icons.emoji_events_outlined),
+              onPressed: () => SubmitEntrySheet.pickTournament(
+                context,
+                source: catch_,
+              ),
+            ),
+          ],
           flexibleSpace: FlexibleSpaceBar(
             background: CatchPhotoCarousel(
               catchId: catch_.id,
