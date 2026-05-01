@@ -1,6 +1,9 @@
 import 'package:fishing_with_friends/core/router/app_router.dart';
-import 'package:fishing_with_friends/core/theme/app_colors.dart';
+import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/features/feed/data/feed_repository_provider.dart';
+import 'package:fishing_with_friends/features/feed/domain/feed_item.dart';
+import 'package:fishing_with_friends/features/feed/presentation/feed_item_card.dart';
 import 'package:fishing_with_friends/features/home/data/home_metrics_provider.dart';
 import 'package:fishing_with_friends/features/home/domain/home_metrics.dart';
 import 'package:fishing_with_friends/features/home/presentation/widgets/action_chips.dart';
@@ -16,11 +19,17 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncMetrics = ref.watch(homeMetricsProvider);
     final metrics = asyncMetrics.valueOrNull ?? const HomeMetrics.empty();
+    final asyncFeed = ref.watch(activityFeedProvider);
+    final user = ref.watch(currentUserProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Home')),
       body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(homeMetricsProvider),
+        onRefresh: () async {
+          ref
+            ..invalidate(homeMetricsProvider)
+            ..invalidate(activityFeedProvider);
+        },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -30,23 +39,40 @@ class HomeScreen extends ConsumerWidget {
             _StatGrid(metrics: metrics),
             const SizedBox(height: AppSpacing.xl),
             Text(
-              'Recent Catches',
+              'Activity',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
             ),
             const SizedBox(height: AppSpacing.md),
-            if (asyncMetrics.isLoading && asyncMetrics.value == null)
-              const _LoadingRecentCatches()
-            else if (asyncMetrics.hasError)
-              const _RecentCatchesError()
-            else if (metrics.isEmpty)
-              const _EmptyRecentCatches()
-            else
-              const _RecentCatchesPlaceholder(),
+            ..._activitySection(asyncFeed, user?.id ?? ''),
           ],
         ),
       ),
+    );
+  }
+
+  List<Widget> _activitySection(
+    AsyncValue<List<FeedItem>> async,
+    String currentUserId,
+  ) {
+    return async.when(
+      data: (feed) {
+        if (feed.isEmpty) {
+          return const [_EmptyActivity()];
+        }
+        return [
+          for (final item in feed) ...[
+            FeedItemCard(
+              item: item,
+              isMine: item.catch_.anglerId == currentUserId,
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ];
+      },
+      loading: () => const [_LoadingActivity()],
+      error: (_, __) => const [_ActivityError()],
     );
   }
 }
@@ -119,8 +145,8 @@ class _StatGrid extends StatelessWidget {
   }
 }
 
-class _EmptyRecentCatches extends StatelessWidget {
-  const _EmptyRecentCatches();
+class _EmptyActivity extends StatelessWidget {
+  const _EmptyActivity();
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +156,7 @@ class _EmptyRecentCatches extends StatelessWidget {
         child: Column(
           children: [
             Icon(
-              Icons.set_meal_outlined,
+              Icons.dynamic_feed_outlined,
               size: 48,
               color: Theme.of(context)
                   .colorScheme
@@ -139,20 +165,30 @@ class _EmptyRecentCatches extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'No catches yet',
+              'No catches in your feed yet',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Log your first catch to start your story.',
+              'Log a catch — or add a friend so you can see theirs.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.lg),
-            FilledButton.icon(
-              onPressed: () => context.push(AppRoutes.logCatch),
-              icon: const Icon(Icons.add),
-              label: const Text('Log your first catch'),
+            Wrap(
+              spacing: AppSpacing.sm,
+              children: [
+                FilledButton.icon(
+                  onPressed: () => context.push(AppRoutes.logCatch),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Log a catch'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => context.go(AppRoutes.friends),
+                  icon: const Icon(Icons.person_add_outlined),
+                  label: const Text('Find anglers'),
+                ),
+              ],
             ),
           ],
         ),
@@ -161,52 +197,8 @@ class _EmptyRecentCatches extends StatelessWidget {
   }
 }
 
-class _RecentCatchesPlaceholder extends StatelessWidget {
-  const _RecentCatchesPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    // Real recent-catch cards land in M1/U6 (CatchCard) — until then this
-    // placeholder card holds the layout while the data is non-empty.
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AspectRatio(
-            aspectRatio: 16 / 10,
-            child: ColoredBox(
-              color: AppColors.mist.withValues(alpha: 0.5),
-              child: const Center(
-                child: Text('Tap Catches tab to see your full list'),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Your most recent catch is logged',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  'Photo previews join the feed in a coming milestone.',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LoadingRecentCatches extends StatelessWidget {
-  const _LoadingRecentCatches();
+class _LoadingActivity extends StatelessWidget {
+  const _LoadingActivity();
 
   @override
   Widget build(BuildContext context) {
@@ -228,8 +220,8 @@ class _LoadingRecentCatches extends StatelessWidget {
   }
 }
 
-class _RecentCatchesError extends ConsumerWidget {
-  const _RecentCatchesError();
+class _ActivityError extends ConsumerWidget {
+  const _ActivityError();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -243,12 +235,12 @@ class _RecentCatchesError extends ConsumerWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
-                "Couldn't load your catches.",
+                "Couldn't load your activity feed.",
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
             TextButton(
-              onPressed: () => ref.invalidate(homeMetricsProvider),
+              onPressed: () => ref.invalidate(activityFeedProvider),
               child: const Text('Retry'),
             ),
           ],
