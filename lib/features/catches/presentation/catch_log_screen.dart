@@ -8,6 +8,9 @@ import 'package:fishing_with_friends/features/catches/domain/catch_input.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/additional_details_section.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/photo_drop_target.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/unit_toggle_field.dart';
+import 'package:fishing_with_friends/features/trips/data/trips_repository_provider.dart';
+import 'package:fishing_with_friends/features/trips/presentation/active_trip_banner.dart';
+import 'package:fishing_with_friends/features/trips/presentation/start_trip_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -200,6 +203,8 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
+                  _TripAffordance(),
+                  const SizedBox(height: AppSpacing.md),
                   PhotoDropTarget(
                     photos: _photos,
                     onAdd: _addPhoto,
@@ -424,6 +429,22 @@ class _DateTimeField extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TripAffordance extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeTrip = ref.watch(activeTripProvider).valueOrNull;
+    if (activeTrip != null) return const ActiveTripBanner();
+    return OutlinedButton.icon(
+      onPressed: () => StartTripSheet.show(context),
+      icon: const Icon(Icons.directions_boat_outlined, size: 18),
+      label: const Text('Start a trip'),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(44),
+      ),
     );
   }
 }

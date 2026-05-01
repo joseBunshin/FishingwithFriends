@@ -5,6 +5,7 @@ import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch_input.dart';
+import 'package:fishing_with_friends/features/trips/data/trips_repository_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Drives the upload + insert flow from the catch-log form.
@@ -33,9 +34,31 @@ class SaveCatchController extends AsyncNotifier<void> {
 
     state = const AsyncLoading();
     try {
+      // Stamp the active trip id (if any) before handing off to the
+      // repository so the inserted row joins the trip atomically.
+      final activeTrip = ref.read(activeTripProvider).valueOrNull;
+      final stamped = activeTrip == null
+          ? input
+          : CatchInput(
+              photos: input.photos,
+              caughtAt: input.caughtAt,
+              secretSpot: input.secretSpot,
+              catchAndRelease: input.catchAndRelease,
+              speciesId: input.speciesId,
+              speciesLabel: input.speciesLabel,
+              weightKg: input.weightKg,
+              lengthCm: input.lengthCm,
+              latitude: input.latitude,
+              longitude: input.longitude,
+              locationLabel: input.locationLabel,
+              notes: input.notes,
+              rig: input.rig,
+              tripId: activeTrip.id,
+            );
+
       final saved = await ref
           .read(catchesRepositoryProvider)
-          .create(input, anglerId: user.id);
+          .create(stamped, anglerId: user.id);
       ref.invalidate(myCatchesProvider);
       state = const AsyncData(null);
       return saved;

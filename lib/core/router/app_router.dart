@@ -10,6 +10,7 @@ import 'package:fishing_with_friends/features/map/presentation/map_screen.dart';
 import 'package:fishing_with_friends/features/me/presentation/me_screen.dart';
 import 'package:fishing_with_friends/features/stats/presentation/stats_screen.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/tournaments_screen.dart';
+import 'package:fishing_with_friends/features/trips/presentation/trip_detail_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -58,6 +59,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/catches/:id',
         builder: (_, state) =>
             CatchDetailScreen(catchId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/trips/:id',
+        builder: (_, state) =>
+            TripDetailScreen(tripId: state.pathParameters['id']!),
       ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
