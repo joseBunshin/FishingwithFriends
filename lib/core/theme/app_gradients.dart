@@ -1,25 +1,20 @@
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
-/// Clean gradient surfaces used in place of background photography.
+/// Gradients are reserved for celebratory surfaces only — PR takeovers, share
+/// cards, badge unlocks. Chrome (app bars, scaffolds, sign-in) stays flat.
 class AppGradients {
   const AppGradients._();
 
-  static const LinearGradient water = LinearGradient(
+  static const LinearGradient celebration = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [AppColors.deepWater, AppColors.lake, AppColors.sky],
+    colors: [AppColors.orange, AppColors.orangeDeep],
   );
 
-  static const LinearGradient dawn = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [AppColors.sky, AppColors.sunrise],
-  );
-
-  static const LinearGradient surface = LinearGradient(
+  static const LinearGradient navyHero = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [AppColors.foam, AppColors.paper],
+    colors: [AppColors.navy, AppColors.navyDeep],
   );
 }

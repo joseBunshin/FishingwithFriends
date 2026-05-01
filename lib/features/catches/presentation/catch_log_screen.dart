@@ -1,4 +1,4 @@
-import 'package:fishing_with_friends/core/theme/app_gradients.dart';
+import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -182,7 +182,7 @@ class _PhotoHero extends StatelessWidget {
       aspectRatio: 4 / 3,
       child: Container(
         decoration: BoxDecoration(
-          gradient: photo == null ? AppGradients.dawn : null,
+          color: photo == null ? AppColors.mist : null,
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
         clipBehavior: Clip.antiAlias,

@@ -1,5 +1,5 @@
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
-import 'package:fishing_with_friends/core/theme/app_gradients.dart';
+import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,8 +58,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppGradients.water),
+      body: ColoredBox(
+        color: AppColors.paper,
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -67,7 +67,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: Card(
-                  color: Colors.white,
+                  color: AppColors.card,
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.xl),
                     child: Form(
@@ -76,7 +76,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const Icon(Icons.set_meal,
-                              size: 48, color: Color(0xFF1E6091)),
+                              size: 48, color: AppColors.navy),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
                             'Fishing with Friends',
