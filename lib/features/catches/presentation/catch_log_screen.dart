@@ -1,13 +1,17 @@
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/features/catches/presentation/widgets/additional_details_section.dart';
+import 'package:fishing_with_friends/features/catches/presentation/widgets/photo_drop_target.dart';
+import 'package:fishing_with_friends/features/catches/presentation/widgets/unit_toggle_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
-/// "Hero" catch logging screen — media-first per spec section 4A.
-/// Visuals only at this stage; persistence wires up in the next milestone.
+/// "Hero" catch logging screen — media-first per spec.
+/// Visual layout matches Lovable. Persistence to Supabase wires up in M1.
 class CatchLogScreen extends ConsumerStatefulWidget {
   const CatchLogScreen({super.key});
 
@@ -17,48 +21,84 @@ class CatchLogScreen extends ConsumerStatefulWidget {
 
 class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _speciesCtl = TextEditingController();
-  final _lengthCtl = TextEditingController();
-  final _weightCtl = TextEditingController();
   final _notesCtl = TextEditingController();
-  XFile? _photo;
+  final _rigCtl = TextEditingController();
+  final _locationCtl = TextEditingController();
+
+  final List<XFile> _photos = [];
+  String? _species;
+  // ignore: unused_field, M1 will pass these to the persistence layer.
+  double? _weightKg;
+  // ignore: unused_field, M1 will pass these to the persistence layer.
+  double? _lengthCm;
+  DateTime _date = DateTime.now();
+  TimeOfDay _time = TimeOfDay.now();
+  bool _catchAndRelease = false;
   bool _secretSpot = false;
 
   @override
   void dispose() {
-    _speciesCtl.dispose();
-    _lengthCtl.dispose();
-    _weightCtl.dispose();
     _notesCtl.dispose();
+    _rigCtl.dispose();
+    _locationCtl.dispose();
     super.dispose();
   }
 
-  Future<void> _pickPhoto(ImageSource source) async {
+  Future<void> _addPhoto() async {
     final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (_) => const _SourcePicker(),
+    );
+    if (source == null) return;
     final file = await picker.pickImage(
       source: source,
       imageQuality: 92,
       maxWidth: 2400,
     );
-    if (file != null) {
+    if (file != null && mounted) {
       await HapticFeedback.lightImpact();
-      setState(() => _photo = file);
+      setState(() => _photos.add(file));
     }
+  }
+
+  void _removePhoto(int i) {
+    setState(() => _photos.removeAt(i));
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+    );
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _time,
+    );
+    if (picked != null) setState(() => _time = picked);
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_photo == null) {
+    if (_photos.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Add a photo of your catch first')),
       );
       return;
     }
     await HapticFeedback.heavyImpact();
-    // TODO(catches): upload to Supabase Storage, insert catches row.
     if (!mounted) return;
+    // TODO(M1): upload photos to Supabase Storage and insert catches row.
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Catch logged (persistence wiring pending)')),
+      const SnackBar(
+        content: Text('Catch logged (persistence wires in M1)'),
+      ),
     );
     context.pop();
   }
@@ -67,97 +107,162 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Log a catch'),
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: const Text('Save',
-                style: TextStyle(fontWeight: FontWeight.w700)),
-          ),
-        ],
+        title: const Text('Log a Catch'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: context.pop,
+        ),
       ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
-            _PhotoHero(
-              photo: _photo,
-              onTakePhoto: () => _pickPhoto(ImageSource.camera),
-              onPickPhoto: () => _pickPhoto(ImageSource.gallery),
+            PhotoDropTarget(
+              photos: _photos,
+              onAdd: _addPhoto,
+              onRemove: _removePhoto,
             ),
             const SizedBox(height: AppSpacing.xl),
-            TextFormField(
-              controller: _speciesCtl,
+            const _SectionLabel('Species *'),
+            const SizedBox(height: AppSpacing.xs),
+            DropdownButtonFormField<String>(
+              initialValue: _species,
               decoration: const InputDecoration(
-                labelText: 'Species',
+                hintText: 'Select species',
                 prefixIcon: Icon(Icons.set_meal_outlined),
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+              items: const [
+                DropdownMenuItem(
+                  value: 'Largemouth Bass',
+                  child: Text('Largemouth Bass'),
+                ),
+                DropdownMenuItem(
+                  value: 'Rainbow Trout',
+                  child: Text('Rainbow Trout'),
+                ),
+                DropdownMenuItem(value: 'Walleye', child: Text('Walleye')),
+                DropdownMenuItem(value: 'Snook', child: Text('Snook')),
+                DropdownMenuItem(value: 'Redfish', child: Text('Redfish')),
+              ],
+              onChanged: (v) => setState(() => _species = v),
+              validator: (v) => v == null ? 'Required' : null,
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.lg),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: TextFormField(
-                    controller: _lengthCtl,
-                    keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp('[0-9.]')),
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: 'Length (in)',
-                      prefixIcon: Icon(Icons.straighten),
-                    ),
+                  child: WeightToggleField(
+                    label: 'Weight *',
+                    onMetricChanged: (kg) => _weightKg = kg,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
-                  child: TextFormField(
-                    controller: _weightCtl,
-                    keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp('[0-9.]')),
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: 'Weight (lb)',
-                      prefixIcon: Icon(Icons.scale_outlined),
-                    ),
+                  child: LengthToggleField(
+                    label: 'Length *',
+                    onMetricChanged: (cm) => _lengthCm = cm,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _notesCtl,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Notes (optional)',
-                alignLabelWithHint: true,
-              ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Expanded(
+                  child: _DateTimeField(
+                    label: 'Date',
+                    icon: Icons.calendar_today_outlined,
+                    text: DateFormat.yMd().format(_date),
+                    onTap: _pickDate,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _DateTimeField(
+                    label: 'Time',
+                    icon: Icons.access_time,
+                    text: _time.format(context),
+                    onTap: _pickTime,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            const _SectionLabel('Location'),
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _locationCtl,
+                    decoration: const InputDecoration(
+                      hintText: 'Lake, river, or city',
+                      prefixIcon: Icon(Icons.location_on_outlined),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                IconButton.filledTonal(
+                  onPressed: () {
+                    // TODO(M1): wire geolocator to fill the location field.
+                  },
+                  icon: const Icon(Icons.my_location),
+                  tooltip: 'Use my location',
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            AdditionalDetailsSection(
+              notesController: _notesCtl,
+              rigController: _rigCtl,
             ),
             const SizedBox(height: AppSpacing.md),
             Card(
-              child: SwitchListTile(
-                value: _secretSpot,
-                onChanged: (v) {
-                  HapticFeedback.selectionClick();
-                  setState(() => _secretSpot = v);
-                },
-                title: const Text('Secret spot'),
-                subtitle: const Text('Hide GPS location from friends'),
-                secondary: const Icon(Icons.location_off_outlined),
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    value: _catchAndRelease,
+                    onChanged: (v) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _catchAndRelease = v);
+                    },
+                    secondary: const Icon(Icons.water_drop_outlined),
+                    title: const Text('Catch & Release'),
+                    subtitle: const Text('I released this fish back.'),
+                  ),
+                  const Divider(height: 1),
+                  SwitchListTile(
+                    value: _secretSpot,
+                    onChanged: (v) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _secretSpot = v);
+                    },
+                    secondary: const Icon(Icons.lock_outline),
+                    title: const Text('Secret Spot'),
+                    subtitle: const Text(
+                      'Hide GPS location from friends.',
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
             FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.orange,
+                foregroundColor: AppColors.white,
+                minimumSize: const Size.fromHeight(56),
+              ),
               onPressed: _save,
               icon: const Icon(Icons.check),
-              label: const Text('Save catch'),
+              label: const Text(
+                'Save Catch',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+              ),
             ),
+            const SizedBox(height: AppSpacing.lg),
           ],
         ),
       ),
@@ -165,66 +270,75 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
   }
 }
 
-class _PhotoHero extends StatelessWidget {
-  const _PhotoHero({
-    required this.photo,
-    required this.onTakePhoto,
-    required this.onPickPhoto,
-  });
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
 
-  final XFile? photo;
-  final VoidCallback onTakePhoto;
-  final VoidCallback onPickPhoto;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 4 / 3,
-      child: Container(
-        decoration: BoxDecoration(
-          color: photo == null ? AppColors.mist : null,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+    );
+  }
+}
+
+class _DateTimeField extends StatelessWidget {
+  const _DateTimeField({
+    required this.label,
+    required this.icon,
+    required this.text,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final String text;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionLabel(label),
+        const SizedBox(height: AppSpacing.xs),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          child: InputDecorator(
+            decoration: InputDecoration(prefixIcon: Icon(icon)),
+            child: Text(text),
+          ),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (photo != null)
-              Image.network(
-                photo!.path,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
-                    const ColoredBox(color: Colors.black12),
-              )
-            else
-              const Center(
-                child: Icon(Icons.add_a_photo,
-                    color: Colors.white, size: 64),
-              ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FilledButton.icon(
-                      onPressed: onTakePhoto,
-                      icon: const Icon(Icons.camera_alt),
-                      label: const Text('Camera'),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    FilledButton.tonalIcon(
-                      onPressed: onPickPhoto,
-                      icon: const Icon(Icons.photo_library_outlined),
-                      label: const Text('Gallery'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      ],
+    );
+  }
+}
+
+class _SourcePicker extends StatelessWidget {
+  const _SourcePicker();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.camera_alt),
+            title: const Text('Take a photo'),
+            onTap: () => Navigator.pop(context, ImageSource.camera),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Pick from gallery'),
+            onTap: () => Navigator.pop(context, ImageSource.gallery),
+          ),
+        ],
       ),
     );
   }
