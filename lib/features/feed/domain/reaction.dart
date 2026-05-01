@@ -22,6 +22,16 @@ enum ReactionKind {
           throw ArgumentError.value(id, 'id', 'Unknown reaction kind'),
     );
   }
+
+  /// Soft variant for deserializing future-schema rows: returns null
+  /// rather than throwing when the persisted kind isn't known to this
+  /// client version.
+  static ReactionKind? tryFromId(String id) {
+    for (final k in ReactionKind.values) {
+      if (k.id == id) return k;
+    }
+    return null;
+  }
 }
 
 @immutable
