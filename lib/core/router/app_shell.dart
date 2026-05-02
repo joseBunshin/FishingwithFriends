@@ -14,10 +14,14 @@ class AppShell extends StatelessWidget {
 
   final Widget child;
 
+  // 3 left + center Log FAB + 3 right = 7 destinations total. Symmetric
+  // tab counts mean the middle gap (and the raised Log button overlaid on
+  // it) lands at the exact horizontal center. Stats was dropped from
+  // bottom nav — still accessible via /stats from Home + Me, but it
+  // didn't earn a tab slot once we reduced for symmetry.
   static const List<_NavTab> _leftTabs = [
     _NavTab(AppRoutes.home, Icons.home_outlined, Icons.home, 'Home'),
     _NavTab(AppRoutes.catches, Icons.set_meal_outlined, Icons.set_meal, 'Catches'),
-    _NavTab(AppRoutes.stats, Icons.bar_chart_outlined, Icons.bar_chart, 'Stats'),
     _NavTab(
       AppRoutes.tourneys,
       Icons.emoji_events_outlined,

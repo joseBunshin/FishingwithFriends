@@ -42,7 +42,16 @@ class HomeScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
             const HomeActionChips(),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xl),
+            InkWell(
+              onTap: () => context.push(AppRoutes.stats),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+                child: SectionLabel('Stats', trailing: 'See all  ›'),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
             _StatGrid(metrics: metrics),
             const SizedBox(height: AppSpacing.xl),
             const SectionLabel('Activity'),
