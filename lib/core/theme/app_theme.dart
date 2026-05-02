@@ -61,10 +61,17 @@ class AppTheme {
         systemOverlayStyle: brightness == Brightness.dark
             ? SystemUiOverlayStyle.light
             : SystemUiOverlayStyle.dark,
-        titleTextStyle: base.textTheme.headlineSmall?.copyWith(
-          fontWeight: FontWeight.w800,
+        // Bigger + tighter than headlineSmall — closer to a magazine
+        // masthead than a Material default. Pairs with the SectionLabel
+        // pattern below it.
+        titleTextStyle: TextStyle(
+          fontSize: 26,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -0.6,
+          height: 1.1,
           color: scheme.onSurface,
         ),
+        toolbarHeight: 60,
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -154,8 +161,8 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: scheme.secondary,
-        foregroundColor: scheme.onSecondary,
+        backgroundColor: scheme.primary,
+        foregroundColor: scheme.onPrimary,
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusXl),

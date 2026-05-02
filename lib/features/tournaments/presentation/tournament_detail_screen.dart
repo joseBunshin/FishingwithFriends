@@ -1,5 +1,4 @@
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
-import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/tournaments/data/tournament_entries_repository_provider.dart';
 import 'package:fishing_with_friends/features/tournaments/data/tournaments_repository_provider.dart';
@@ -81,8 +80,6 @@ class _Body extends ConsumerWidget {
         ),
         floatingActionButton: phase == TournamentPhase.live
             ? FloatingActionButton.extended(
-                backgroundColor: AppColors.orange,
-                foregroundColor: AppColors.white,
                 icon: const Icon(Icons.add),
                 label: const Text('Submit catch'),
                 onPressed: () => SubmitEntrySheet.pickCatch(

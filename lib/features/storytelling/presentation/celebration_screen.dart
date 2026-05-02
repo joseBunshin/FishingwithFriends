@@ -253,8 +253,6 @@ class _CtaRow extends ConsumerWidget {
               context.go('/catches/$catchId');
             },
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.orange,
-              foregroundColor: AppColors.white,
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             ),
             child: const Text('See catch'),

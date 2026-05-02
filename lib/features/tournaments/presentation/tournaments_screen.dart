@@ -1,5 +1,5 @@
-import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/core/widgets/section_label.dart';
 import 'package:fishing_with_friends/features/tournaments/data/tournaments_repository_provider.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament_phase.dart';
@@ -67,49 +67,33 @@ class _PartitionedList extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         if (live.isNotEmpty) ...[
-          _SectionHeader(label: 'Live (${live.length})'),
+          SectionLabel('Live now', trailing: '${live.length}'),
+          const SizedBox(height: AppSpacing.md),
           for (final t in live) ...[
             TournamentCard(tournament: t),
             const SizedBox(height: AppSpacing.md),
           ],
         ],
         if (registration.isNotEmpty) ...[
-          _SectionHeader(label: 'Open (${registration.length})'),
+          if (live.isNotEmpty) const SizedBox(height: AppSpacing.md),
+          SectionLabel('Open for entry', trailing: '${registration.length}'),
+          const SizedBox(height: AppSpacing.md),
           for (final t in registration) ...[
             TournamentCard(tournament: t),
             const SizedBox(height: AppSpacing.md),
           ],
         ],
         if (closed.isNotEmpty) ...[
-          _SectionHeader(label: 'Closed (${closed.length})'),
+          if (live.isNotEmpty || registration.isNotEmpty)
+            const SizedBox(height: AppSpacing.md),
+          SectionLabel('Past', trailing: '${closed.length}'),
+          const SizedBox(height: AppSpacing.md),
           for (final t in closed) ...[
             TournamentCard(tournament: t),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
           ],
         ],
       ],
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        top: AppSpacing.md,
-        bottom: AppSpacing.sm,
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-      ),
     );
   }
 }
@@ -150,10 +134,6 @@ class _EmptyState extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.orange,
-                    foregroundColor: AppColors.white,
-                  ),
                   onPressed: () => CreateTournamentSheet.show(context),
                   icon: const Icon(Icons.add),
                   label: const Text('Create a tournament'),

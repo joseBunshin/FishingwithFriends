@@ -204,8 +204,6 @@ class _CreateTournamentSheetState
                 const SizedBox(height: AppSpacing.xl),
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.orange,
-                    foregroundColor: AppColors.white,
                     minimumSize: const Size.fromHeight(56),
                   ),
                   onPressed: busy ? null : _submit,

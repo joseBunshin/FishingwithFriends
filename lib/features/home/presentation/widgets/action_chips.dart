@@ -15,8 +15,6 @@ class HomeActionChips extends StatelessWidget {
         Expanded(
           child: FilledButton.icon(
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.secondary,
-              foregroundColor: Theme.of(context).colorScheme.onSecondary,
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.lg,
                 vertical: AppSpacing.md,

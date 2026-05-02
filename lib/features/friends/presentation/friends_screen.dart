@@ -352,8 +352,6 @@ class _SearchResultRow extends ConsumerWidget {
         style: FilledButton.styleFrom(
           minimumSize: const Size(0, 36),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          backgroundColor: AppColors.orange,
-          foregroundColor: AppColors.white,
         ),
         child: const Text('Add'),
       );

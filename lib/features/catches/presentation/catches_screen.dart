@@ -404,10 +404,6 @@ class _EmptyCatches extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.orange,
-                    foregroundColor: AppColors.white,
-                  ),
                   onPressed: () => context.push(AppRoutes.logCatch),
                   icon: const Icon(Icons.add),
                   label: const Text('Log your first catch'),

@@ -373,8 +373,6 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
                   const SizedBox(height: AppSpacing.xxl),
                   FilledButton.icon(
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.orange,
-                      foregroundColor: AppColors.white,
                       minimumSize: const Size.fromHeight(56),
                     ),
                     onPressed: saving ? null : _save,

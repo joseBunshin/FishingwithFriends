@@ -1,106 +1,198 @@
 import 'package:fishing_with_friends/core/router/app_router.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
+import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-/// Bottom-nav shell with 8 tabs (Lovable parity).
-/// Order: Home / Catches / Log / Stats / Tourneys / Map / Friends / Me.
-/// `Log` pushes the catch-creation screen rather than rendering inside the shell.
+/// Bottom-nav shell with a raised, dead-center Log button. 7 destinations
+/// flank the center FAB (4 left + 3 right) for a total of 8 surfaces, but
+/// Log feels distinct from the rest — bigger, navy, slightly elevated,
+/// the obvious "log a fish" CTA wherever you are in the app.
 class AppShell extends StatelessWidget {
   const AppShell({required this.child, super.key});
 
   final Widget child;
 
-  static const List<_NavTab> _tabs = [
+  static const List<_NavTab> _leftTabs = [
     _NavTab(AppRoutes.home, Icons.home_outlined, Icons.home, 'Home'),
-    _NavTab(
-      AppRoutes.catches,
-      Icons.set_meal_outlined,
-      Icons.set_meal,
-      'Catches',
-    ),
-    _NavTab(
-      AppRoutes.logCatch,
-      Icons.add_circle_outline,
-      Icons.add_circle,
-      'Log',
-      isLog: true,
-    ),
-    _NavTab(
-      AppRoutes.stats,
-      Icons.bar_chart_outlined,
-      Icons.bar_chart,
-      'Stats',
-    ),
+    _NavTab(AppRoutes.catches, Icons.set_meal_outlined, Icons.set_meal, 'Catches'),
+    _NavTab(AppRoutes.stats, Icons.bar_chart_outlined, Icons.bar_chart, 'Stats'),
     _NavTab(
       AppRoutes.tourneys,
       Icons.emoji_events_outlined,
       Icons.emoji_events,
       'Tourneys',
     ),
-    _NavTab(
-      AppRoutes.map,
-      Icons.location_on_outlined,
-      Icons.location_on,
-      'Map',
-    ),
-    _NavTab(
-      AppRoutes.friends,
-      Icons.people_outline,
-      Icons.people,
-      'Friends',
-    ),
+  ];
+
+  static const List<_NavTab> _rightTabs = [
+    _NavTab(AppRoutes.map, Icons.location_on_outlined, Icons.location_on, 'Map'),
+    _NavTab(AppRoutes.friends, Icons.people_outline, Icons.people, 'Friends'),
     _NavTab(AppRoutes.me, Icons.person_outline, Icons.person, 'Me'),
   ];
 
-  int _indexFor(String location) {
-    final idx = _tabs.indexWhere(
-      (t) => !t.isLog && location.startsWith(t.path),
-    );
-    return idx < 0 ? 0 : idx;
+  static List<_NavTab> get _allTabs => [..._leftTabs, ..._rightTabs];
+
+  bool _isSelected(String location, _NavTab tab) {
+    return location.startsWith(tab.path);
   }
 
-  void _onSelected(BuildContext context, int i) {
-    final tab = _tabs[i];
-    if (tab.isLog) {
-      HapticFeedback.mediumImpact();
-      context.push(tab.path);
-      return;
-    }
+  void _onTab(BuildContext context, _NavTab tab) {
     HapticFeedback.selectionClick();
     context.go(tab.path);
+  }
+
+  void _onLog(BuildContext context) {
+    HapticFeedback.mediumImpact();
+    context.push(AppRoutes.logCatch);
   }
 
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
-    final selected = _indexFor(location);
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Log button color — navy in light, orange in dark for contrast against
+    // dark surfaces. Foreground always white.
+    final logBg = isDark ? AppColors.orange : AppColors.navy;
 
     return Scaffold(
       body: child,
+      extendBody: true,
       bottomNavigationBar: SafeArea(
         top: false,
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.mist, width: 1),
-            ),
-          ),
-          child: NavigationBar(
-            selectedIndex: selected,
-            onDestinationSelected: (i) => _onSelected(context, i),
-            destinations: [
-              for (final tab in _tabs)
-                NavigationDestination(
-                  icon: Icon(tab.icon),
-                  selectedIcon: Icon(
-                    tab.activeIcon,
-                    color: tab.isLog ? AppColors.orange : null,
+        child: SizedBox(
+          height: 72,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Underlying nav bar — surface fill + hairline top border.
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: scheme.surface,
+                    border: Border(
+                      top: BorderSide(color: scheme.outlineVariant),
+                    ),
                   ),
-                  label: tab.label,
+                  child: Row(
+                    children: [
+                      for (final tab in _leftTabs)
+                        Expanded(
+                          child: _NavItem(
+                            tab: tab,
+                            selected: _isSelected(location, tab),
+                            onTap: () => _onTab(context, tab),
+                          ),
+                        ),
+                      // Center spacer reserved for the raised Log button.
+                      const SizedBox(width: 72),
+                      for (final tab in _rightTabs)
+                        Expanded(
+                          child: _NavItem(
+                            tab: tab,
+                            selected: _isSelected(location, tab),
+                            onTap: () => _onTab(context, tab),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
+              ),
+              // Raised Log button — overlaps the top of the bar.
+              Positioned(
+                top: -22,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: _RaisedLogButton(
+                    background: logBg,
+                    onTap: () => _onLog(context),
+                  ),
+                ),
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// For tests / external introspection.
+  @visibleForTesting
+  static List<String> get tabPaths =>
+      _allTabs.map((t) => t.path).toList(growable: false);
+}
+
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.tab,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final _NavTab tab;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = selected
+        ? scheme.primary
+        : scheme.onSurface.withValues(alpha: 0.6);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(selected ? tab.activeIcon : tab.icon, size: 24, color: color),
+            const SizedBox(height: 2),
+            Text(
+              tab.label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RaisedLogButton extends StatelessWidget {
+  const _RaisedLogButton({required this.background, required this.onTap});
+
+  final Color background;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 64,
+      height: 64,
+      child: Material(
+        color: background,
+        shape: const CircleBorder(),
+        elevation: 6,
+        shadowColor: AppColors.navy.withValues(alpha: 0.3),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: const Center(
+            child: Icon(
+              Icons.add,
+              size: 32,
+              color: AppColors.white,
+            ),
           ),
         ),
       ),
@@ -109,17 +201,10 @@ class AppShell extends StatelessWidget {
 }
 
 class _NavTab {
-  const _NavTab(
-    this.path,
-    this.icon,
-    this.activeIcon,
-    this.label, {
-    this.isLog = false,
-  });
+  const _NavTab(this.path, this.icon, this.activeIcon, this.label);
 
   final String path;
   final IconData icon;
   final IconData activeIcon;
   final String label;
-  final bool isLog;
 }
