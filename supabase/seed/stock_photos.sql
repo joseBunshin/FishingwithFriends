@@ -21,23 +21,26 @@
 begin;
 
 -- ---------------------------------------------------------------------------
--- 1. Avatars — one per seed user, deterministic portrait via pravatar
+-- 1. Avatars — direct JPG portraits from randomuser.me. Picked deliberately
+-- because the previous pravatar.cc URLs failed to render in Flutter web
+-- (they redirect through their CDN with inconsistent CORS headers).
+-- randomuser.me serves direct .jpg with `Access-Control-Allow-Origin: *`.
 -- ---------------------------------------------------------------------------
 
 update public.profiles
-set avatar_path = 'https://i.pravatar.cc/300?u=alice'
+set avatar_path = 'https://randomuser.me/api/portraits/women/68.jpg'
 where id = (select id from auth.users where email = 'alice@fwf.test');
 
 update public.profiles
-set avatar_path = 'https://i.pravatar.cc/300?u=bob'
+set avatar_path = 'https://randomuser.me/api/portraits/men/45.jpg'
 where id = (select id from auth.users where email = 'bob@fwf.test');
 
 update public.profiles
-set avatar_path = 'https://i.pravatar.cc/300?u=charlie'
+set avatar_path = 'https://randomuser.me/api/portraits/men/22.jpg'
 where id = (select id from auth.users where email = 'charlie@fwf.test');
 
 update public.profiles
-set avatar_path = 'https://i.pravatar.cc/300?u=josediaz'
+set avatar_path = 'https://randomuser.me/api/portraits/men/55.jpg'
 where id = (select id from auth.users where email = 'jose.diaz@bunshin.io');
 
 -- ---------------------------------------------------------------------------
