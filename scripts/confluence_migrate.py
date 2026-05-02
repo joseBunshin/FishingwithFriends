@@ -286,11 +286,32 @@ def main():
     page_from_md(deploy_id, "iOS — App Store deployment", deploy_dir / "ios.md")
     page_from_md(
         deploy_id,
+        "iOS deployment checklist",
+        deploy_dir / "ios-checklist.md",
+    )
+    page_from_md(
+        deploy_id,
         "Android — Google Play deployment",
         deploy_dir / "android.md",
     )
 
-    # 7. Solutions.
+    # 7. Legal.
+    print("\n[Legal]")
+    legal_id = section_page(
+        fwf_id,
+        "Legal",
+        "<p>Public-facing legal documents — privacy policy and terms. "
+        "These get hosted on bunshin.io and referenced from the App Store "
+        "/ Google Play listings; the canonical source lives in "
+        "<code>docs/legal/</code> and is mirrored here.</p>",
+    )
+    page_from_md(
+        legal_id,
+        "Privacy Policy — Fishing with Friends",
+        REPO / "docs" / "legal" / "privacy-policy.md",
+    )
+
+    # 8. Solutions.
     print("\n[Solutions]")
     sol_id = section_page(
         fwf_id,
