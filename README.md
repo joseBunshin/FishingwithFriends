@@ -99,7 +99,8 @@ Each feature folder uses a `data / domain / presentation` split as it grows.
 | **Offline-first — drift SQLite outbox + sync orchestrator, optimistic UI badges + sync pill, photo retry** | ✅ M6a |
 | **Conditions auto-fill — Open-Meteo + NOAA Tides edge function via pg_net trigger, conditions block on detail, Stats correlation unlock** | ✅ M6b (deploy edge fn — see `docs/EDGE_FUNCTIONS.md`) |
 | Push notifications (FCM/APNs), notification preferences | M6c (needs `flutterfire configure`) |
-| Onboarding, polish, store submission | M7 |
+| **Onboarding — 3-step flow (display name + handle, home water, find friends); edit profile on Me tab** | ✅ M7 (partial) |
+| App icon + launch screen; store submission metadata | M7 polish (needs Mac for iOS builds) |
 
 ## Design rules
 

@@ -1,5 +1,6 @@
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/features/profile/data/my_profile_repository_provider.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/badge_wall.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/streak_chip.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,14 @@ class MeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final asyncProfile = ref.watch(myProfileProvider);
     final scheme = Theme.of(context).colorScheme;
+
+    final profile = asyncProfile.valueOrNull;
+    final displayName = (profile?.displayName?.isNotEmpty ?? false)
+        ? profile!.displayName!
+        : (user?.email ?? 'Signed out');
+    final handle = profile?.handle ?? '@you';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Me')),
@@ -29,14 +37,29 @@ class MeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  user?.email ?? 'Signed out',
+                  displayName,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  '@silentfisher409',
+                  handle,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                if (profile?.homeWater != null &&
+                    profile!.homeWater!.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.water_outlined, size: 14),
+                      const SizedBox(width: AppSpacing.xxs),
+                      Text(
+                        profile.homeWater!,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.md),
                 const StreakChip(),
               ],
@@ -58,6 +81,13 @@ class MeScreen extends ConsumerWidget {
           Card(
             child: Column(
               children: [
+                ListTile(
+                  leading: const Icon(Icons.edit_outlined),
+                  title: const Text('Edit profile'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/me/edit'),
+                ),
+                const Divider(height: 1),
                 const ListTile(
                   leading: Icon(Icons.notifications_outlined),
                   title: Text('Notifications'),

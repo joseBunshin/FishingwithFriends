@@ -1,6 +1,7 @@
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/features/friends/data/friends_data_source.dart';
 import 'package:fishing_with_friends/features/friends/data/friends_repository.dart';
+import 'package:fishing_with_friends/features/friends/domain/profile.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final friendsDataSourceProvider = Provider<FriendsDataSource>((ref) {
@@ -31,4 +32,16 @@ final friendIdsProvider = Provider<AsyncValue<List<String>>>((ref) {
   return ref.watch(friendsBundleProvider).whenData((b) {
     return user == null ? const <String>[] : b.acceptedFriendIds(user.id);
   });
+});
+
+/// Substring search on profile usernames; excludes the signed-in user.
+/// Used by the M7 onboarding "Find friends" step + the Friends-tab search.
+final searchProfilesProvider =
+    FutureProvider.family<List<Profile>, String>((ref, query) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return const [];
+  if (query.trim().length < 2) return const [];
+  return ref
+      .watch(friendsRepositoryProvider)
+      .search(query: query, currentUserId: user.id);
 });

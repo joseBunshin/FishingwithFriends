@@ -33,6 +33,9 @@ Open **SQL Editor → New query** and run, in order:
 8. `supabase/migrations/0008_auto_profile_on_signup.sql` — trigger on `auth.users` insert that auto-creates a `public.profiles` row (derived username) plus a one-time backfill for users that signed up before this migration. Without it any insert that FKs to `profiles` fails on a fresh sign-up.
 9. `supabase/migrations/0009_storytelling_schema.sql` — `personal_records`, `badges` (+ 5 seeded definitions), `user_badges` tables with RLS, plus an AFTER INSERT/UPDATE trigger on `catches` that auto-detects new PRs (per-species weight + length) and earned badges. **Required for M5** — without it the celebration screen never fires.
 10. `supabase/migrations/0010_conditions_autofill.sql` — enables `pg_net`, adds an AFTER INSERT trigger on `catches` that calls a `conditions-fill` edge function asynchronously to populate weather + tide. **Optional for M6** — if the edge function URL isn't configured (`app.settings.conditions_fn_url`), the trigger no-ops and conditions remain empty. See `docs/EDGE_FUNCTIONS.md` for deploy + config.
+11. `supabase/migrations/0011_fwf_app_settings_fallback.sql` — table-backed `fwf_setting()` fallback for environments where the dashboard SQL Editor can't `alter database postgres set ...`. Insert key/value rows into `public.fwf_app_settings` instead.
+12. `supabase/migrations/0012_conditions_search_path_fix.sql` — adds `extensions` to the conditions trigger function's `search_path` so PostGIS types resolve.
+13. `supabase/migrations/0013_profile_onboarding_columns.sql` — adds `home_water` + `onboarding_completed_at` to `profiles`. **Required for M7** — without it the onboarding flow never finishes and the router traps users on `/onboarding`.
 
 **Realtime:** After running 0006, enable Realtime for `tournament_entries` and `tournament_chat_messages` in **Database → Replication** so the live leaderboard + chat update without a refresh.
 
