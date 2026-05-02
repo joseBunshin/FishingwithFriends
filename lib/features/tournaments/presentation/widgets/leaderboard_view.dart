@@ -14,12 +14,14 @@ class LeaderboardView extends ConsumerWidget {
   const LeaderboardView({
     required this.entries,
     required this.metric,
+    required this.tournamentId,
     this.speciesFilter,
     super.key,
   });
 
   final List<TournamentEntry> entries;
   final TournamentMetric metric;
+  final String tournamentId;
   final String? speciesFilter;
 
   String _formatValue(double v, TournamentMetric m) {
@@ -65,6 +67,7 @@ class LeaderboardView extends ConsumerWidget {
             handle: bundle?.profilesById[rows[i].anglerId]?.handle ??
                 '@angler',
             value: _formatValue(rows[i].value, metric),
+            tournamentId: tournamentId,
           ),
       ],
     );
@@ -77,12 +80,14 @@ class _LeaderboardRowTile extends StatelessWidget {
     required this.row,
     required this.handle,
     required this.value,
+    required this.tournamentId,
   });
 
   final int rank;
   final LeaderboardRow row;
   final String handle;
   final String value;
+  final String tournamentId;
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +102,12 @@ class _LeaderboardRowTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => context.push('/profile/${row.anglerId}'),
+          // Tap an angler row → their tournament-scoped entries view, not
+          // their full social profile. Cheaper detour for the "what did
+          // they catch *here*?" question that brought you to the row.
+          onTap: () => context.push(
+            '/tournaments/$tournamentId/anglers/${row.anglerId}',
+          ),
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(

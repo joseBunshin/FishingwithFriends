@@ -160,6 +160,7 @@ class _LeaderboardTab extends StatelessWidget {
         LeaderboardView(
           entries: entries,
           metric: tournament.metric,
+          tournamentId: tournament.id,
         ),
         const SizedBox(height: AppSpacing.lg),
         Card(

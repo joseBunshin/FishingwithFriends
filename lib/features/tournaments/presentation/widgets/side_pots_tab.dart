@@ -53,6 +53,7 @@ class SidePotsTab extends ConsumerWidget {
               LeaderboardView(
                 entries: entries,
                 metric: pot.metric,
+                tournamentId: tournamentId,
                 speciesFilter: pot.speciesFilter,
               ),
               const SizedBox(height: AppSpacing.lg),

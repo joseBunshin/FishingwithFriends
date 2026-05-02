@@ -21,6 +21,7 @@ import 'package:fishing_with_friends/features/splash/presentation/splash_screen.
 import 'package:fishing_with_friends/features/stats/presentation/stats_screen.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/celebration_screen.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/year_in_review_screen.dart';
+import 'package:fishing_with_friends/features/tournaments/presentation/angler_entries_screen.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/tournament_detail_screen.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/tournaments_screen.dart';
 import 'package:fishing_with_friends/features/trips/presentation/trip_detail_screen.dart';
@@ -164,6 +165,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/tournaments/:id',
         builder: (_, state) => TournamentDetailScreen(
           tournamentId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/tournaments/:id/anglers/:anglerId',
+        builder: (_, state) => AnglerEntriesScreen(
+          tournamentId: state.pathParameters['id']!,
+          anglerId: state.pathParameters['anglerId']!,
         ),
       ),
       GoRoute(

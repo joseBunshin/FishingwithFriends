@@ -1,6 +1,8 @@
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/core/widgets/section_label.dart';
 import 'package:fishing_with_friends/features/friends/data/friends_repository_provider.dart';
+import 'package:fishing_with_friends/features/profile/presentation/widgets/avatar_view.dart';
 import 'package:fishing_with_friends/features/tournaments/application/tournament_member_controller.dart';
 import 'package:fishing_with_friends/features/tournaments/data/tournaments_repository_provider.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament.dart';
@@ -8,6 +10,7 @@ import 'package:fishing_with_friends/features/tournaments/domain/tournament_memb
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class MembersTab extends ConsumerWidget {
   const MembersTab({
@@ -34,36 +37,39 @@ class MembersTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
-            if (isCreator) _JoinCodeCard(joinCode: tournament.joinCode),
-            if (isCreator) const SizedBox(height: AppSpacing.lg),
+            if (isCreator) ...[
+              _JoinCodeCard(joinCode: tournament.joinCode),
+              const SizedBox(height: AppSpacing.xl),
+            ],
             if (pending.isNotEmpty) ...[
-              Text(
-                'Pending (${pending.length})',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              for (final m in pending)
+              SectionLabel('Pending', trailing: '${pending.length}'),
+              const SizedBox(height: AppSpacing.md),
+              for (final m in pending) ...[
                 _MemberRow(
                   member: m,
                   isCreator: isCreator,
                   tournamentId: tournament.id,
                 ),
+                const SizedBox(height: AppSpacing.sm),
+              ],
               const SizedBox(height: AppSpacing.lg),
             ],
-            Text(
-              'Accepted (${accepted.length})',
-              style: Theme.of(context).textTheme.titleSmall,
+            SectionLabel(
+              'Accepted',
+              trailing: accepted.isEmpty ? null : '${accepted.length}',
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.md),
             if (accepted.isEmpty)
               const _Empty('No accepted members yet.')
             else
-              for (final m in accepted)
+              for (final m in accepted) ...[
                 _MemberRow(
                   member: m,
                   isCreator: isCreator,
                   tournamentId: tournament.id,
                 ),
+                const SizedBox(height: AppSpacing.sm),
+              ],
           ],
         );
       },
@@ -73,6 +79,8 @@ class MembersTab extends ConsumerWidget {
   }
 }
 
+/// Navy hero with the 8-char join code in tracked white type. Tap a
+/// dedicated copy button on the right to put it on the clipboard.
 class _JoinCodeCard extends StatelessWidget {
   const _JoinCodeCard({required this.joinCode});
 
@@ -80,41 +88,48 @@ class _JoinCodeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Join Code',
-                    style: Theme.of(context).textTheme.bodySmall,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.navy,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'JOIN CODE',
+                  style: TextStyle(
+                    color: AppColors.mist.withValues(alpha: 0.8),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.4,
                   ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    joinCode.toUpperCase(),
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 4,
-                          color: AppColors.orange,
-                        ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  joinCode.toUpperCase(),
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 6,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(width: AppSpacing.sm),
-            IconButton.outlined(
-              tooltip: 'Copy join code',
-              icon: const Icon(Icons.content_copy, size: 16),
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: joinCode));
-              },
-            ),
-          ],
-        ),
+          ),
+          IconButton(
+            tooltip: 'Copy join code',
+            icon: const Icon(Icons.content_copy, color: AppColors.orange),
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: joinCode));
+            },
+          ),
+        ],
       ),
     );
   }
@@ -133,69 +148,103 @@ class _MemberRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
     final bundle = ref.watch(friendsBundleProvider).valueOrNull;
-    final handle =
-        bundle?.profilesById[member.anglerId]?.handle ?? '@angler';
+    final profile = bundle?.profilesById[member.anglerId];
+    final hasDisplayName = profile?.displayName?.isNotEmpty ?? false;
+    final primary = hasDisplayName
+        ? profile!.displayName!
+        : profile?.handle ?? '@angler';
+    final secondary = hasDisplayName ? profile!.handle : null;
     final controller = ref.read(tournamentMemberControllerProvider.notifier);
     final busy =
         ref.watch(tournamentMemberControllerProvider).isLoading;
     final canApprove =
         isCreator && member.status == TournamentMemberStatus.pending;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
+    return Material(
+      color: scheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        // Tap a member → their tournament-scoped entries view, not their
+        // full profile. The user wants a quick "what'd they submit?" peek.
+        onTap: () => context.push(
+          '/tournaments/$tournamentId/anglers/${member.anglerId}',
         ),
-        child: Row(
-          children: [
-            const _AvatarPlaceholder(),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                handle,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ),
-            if (canApprove) ...[
-              TextButton(
-                onPressed: busy
-                    ? null
-                    : () => controller.reject(
-                          tournamentId: tournamentId,
-                          anglerId: member.anglerId,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            border: Border.all(color: scheme.outlineVariant),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          ),
+          child: Row(
+            children: [
+              AvatarView(avatarPath: profile?.avatarPath, radius: 22),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      primary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    if (secondary != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        secondary,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
-                child: const Text('Reject'),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              const SizedBox(width: AppSpacing.xs),
-              FilledButton(
-                onPressed: busy
-                    ? null
-                    : () => controller.approve(
-                          tournamentId: tournamentId,
-                          anglerId: member.anglerId,
-                        ),
-                child: const Text('Accept'),
-              ),
+              if (canApprove) ...[
+                IconButton(
+                  tooltip: 'Reject',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: busy
+                      ? null
+                      : () => controller.reject(
+                            tournamentId: tournamentId,
+                            anglerId: member.anglerId,
+                          ),
+                  icon: const Icon(Icons.close, size: 20),
+                ),
+                FilledButton(
+                  onPressed: busy
+                      ? null
+                      : () => controller.approve(
+                            tournamentId: tournamentId,
+                            anglerId: member.anglerId,
+                          ),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
+                  ),
+                  child: const Text('Accept'),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
-    );
-  }
-}
-
-class _AvatarPlaceholder extends StatelessWidget {
-  const _AvatarPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return CircleAvatar(
-      radius: 16,
-      backgroundColor: scheme.primary.withValues(alpha: 0.12),
-      child: Icon(Icons.person, size: 18, color: scheme.primary),
     );
   }
 }
