@@ -60,6 +60,8 @@ The service-role key (already inserted for the conditions function) is reused.
 
 **M4 introduces no new migrations.** The Catch Map and Stats deepening features are pure read-side against the existing schema. RLS contract from 0001 + the recursion fix in 0007 remain authoritative.
 
+**Dev seed (optional).** Once migrations are applied, `supabase/seed/dev_seed.sql` populates 3 mock friend accounts + ~25 catches + 1 trip + 1 active tournament + reactions/comments so you can exercise the full app end-to-end. The file's docblock has the step-by-step (create three test users via Auth → Users, then paste the SQL). Idempotent — re-running wipes prior seed data scoped to the test users only.
+
 Or, if you use the Supabase CLI:
 
 ```bash
