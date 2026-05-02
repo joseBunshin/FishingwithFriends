@@ -11,8 +11,22 @@ extension DisplayUnitsX on DisplayUnits {
       };
 }
 
+enum TemperatureUnits { celsius, fahrenheit }
+
+extension TemperatureUnitsX on TemperatureUnits {
+  String get label => switch (this) {
+        TemperatureUnits.celsius => 'Celsius (°C)',
+        TemperatureUnits.fahrenheit => 'Fahrenheit (°F)',
+      };
+  String get short => switch (this) {
+        TemperatureUnits.celsius => '°C',
+        TemperatureUnits.fahrenheit => '°F',
+      };
+}
+
 const _kThemeKey = 'app.theme_mode';
 const _kUnitsKey = 'app.display_units';
+const _kTempKey = 'app.temperature_units';
 
 /// Loaded once on app boot. Holds the SharedPreferences singleton + the
 /// initial values to seed the providers.
@@ -83,6 +97,19 @@ class AppPreferences {
       units == DisplayUnits.metric ? 'metric' : 'imperial',
     );
   }
+
+  TemperatureUnits get temperatureUnits {
+    return _read(_kTempKey) == 'fahrenheit'
+        ? TemperatureUnits.fahrenheit
+        : TemperatureUnits.celsius;
+  }
+
+  Future<void> setTemperatureUnits(TemperatureUnits units) {
+    return _write(
+      _kTempKey,
+      units == TemperatureUnits.fahrenheit ? 'fahrenheit' : 'celsius',
+    );
+  }
 }
 
 /// Initialized in `main.dart` via `appPreferencesProvider.overrideWithValue`.
@@ -118,3 +145,18 @@ class DisplayUnitsController extends Notifier<DisplayUnits> {
 final displayUnitsProvider =
     NotifierProvider<DisplayUnitsController, DisplayUnits>(
         DisplayUnitsController.new);
+
+class TemperatureUnitsController extends Notifier<TemperatureUnits> {
+  @override
+  TemperatureUnits build() =>
+      ref.watch(appPreferencesProvider).temperatureUnits;
+
+  Future<void> set(TemperatureUnits units) async {
+    await ref.read(appPreferencesProvider).setTemperatureUnits(units);
+    state = units;
+  }
+}
+
+final temperatureUnitsProvider =
+    NotifierProvider<TemperatureUnitsController, TemperatureUnits>(
+        TemperatureUnitsController.new);

@@ -438,14 +438,15 @@ bool _hasAnyDetail(Catch c) {
 /// rig, notes, conditions — under one tile with small-caps sub-sections
 /// separated by hairlines. Replaces the three separate cards that read
 /// disjointed before.
-class _DetailsCard extends StatelessWidget {
+class _DetailsCard extends ConsumerWidget {
   const _DetailsCard({required this.catch_});
 
   final Catch catch_;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final tempUnits = ref.watch(temperatureUnitsProvider);
     final children = <Widget>[];
 
     final rig = catch_.rig;
@@ -458,7 +459,7 @@ class _DetailsCard extends StatelessWidget {
       children.add(_DetailRow(label: 'Notes', value: notes));
     }
     if (catch_.conditions.isNotEmpty) {
-      final pills = _conditionPills(catch_.conditions);
+      final pills = _conditionPills(catch_.conditions, tempUnits);
       if (pills.isNotEmpty) {
         if (children.isNotEmpty) children.add(const _DetailDivider());
         children.add(_ConditionsRow(pills: pills));
@@ -607,13 +608,16 @@ class _ConditionChip extends StatelessWidget {
   }
 }
 
-List<_ConditionPill> _conditionPills(Map<String, dynamic> conditions) {
+List<_ConditionPill> _conditionPills(
+  Map<String, dynamic> conditions,
+  TemperatureUnits tempUnits,
+) {
   final out = <_ConditionPill>[];
   final tempC = conditions['temp_c'];
   if (tempC is num) {
     out.add(_ConditionPill(
       icon: Icons.thermostat_outlined,
-      label: '${tempC.toStringAsFixed(0)}°C',
+      label: formatTemperature(tempC, tempUnits),
     ));
   }
   final wind = conditions['wind_kph'];
@@ -627,7 +631,7 @@ List<_ConditionPill> _conditionPills(Map<String, dynamic> conditions) {
   if (waterTemp is num) {
     out.add(_ConditionPill(
       icon: Icons.waves,
-      label: 'water ${waterTemp.toStringAsFixed(0)}°C',
+      label: 'water ${formatTemperature(waterTemp, tempUnits)}',
     ));
   }
   final tide = conditions['tide_state'];
@@ -660,7 +664,7 @@ List<_ConditionPill> _conditionPills(Map<String, dynamic> conditions) {
     if (t is num) {
       out.add(_ConditionPill(
         icon: Icons.thermostat_outlined,
-        label: '${t.toStringAsFixed(0)}°C',
+        label: formatTemperature(t, tempUnits),
       ));
     }
   }

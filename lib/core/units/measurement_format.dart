@@ -37,3 +37,16 @@ String? formatLength(double? cm, DisplayUnits units) {
     DisplayUnits.metric => '${cm.toStringAsFixed(1)} cm',
   };
 }
+
+/// Format a temperature stored in Celsius for display per the user's
+/// preferred temperature units.
+///
+///   formatTemperature(18, TemperatureUnits.celsius)    // -> '18°C'
+///   formatTemperature(18, TemperatureUnits.fahrenheit) // -> '64°F'
+String formatTemperature(num celsius, TemperatureUnits units) {
+  return switch (units) {
+    TemperatureUnits.celsius => '${celsius.toStringAsFixed(0)}°C',
+    TemperatureUnits.fahrenheit =>
+      '${(celsius * 9 / 5 + 32).toStringAsFixed(0)}°F',
+  };
+}

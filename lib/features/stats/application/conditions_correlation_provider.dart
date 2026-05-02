@@ -1,5 +1,7 @@
+import 'package:fishing_with_friends/core/units/measurement_format.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
+import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
 
@@ -32,6 +34,7 @@ class ConditionsCorrelation {
 /// per top species.
 final conditionsCorrelationProvider =
     FutureProvider<List<ConditionsCorrelation>>((ref) async {
+  final tempUnits = ref.watch(temperatureUnitsProvider);
   final mine = await ref.watch(myCatchesProvider.future);
   final withConditions = mine
       .where((c) =>
@@ -76,9 +79,11 @@ final conditionsCorrelationProvider =
     String? tempBucket;
     if (temps.isNotEmpty) {
       final avg = temps.reduce((a, b) => a + b) / temps.length;
-      final lo = (avg - 3).round();
-      final hi = (avg + 3).round();
-      tempBucket = '$lo–$hi°C water';
+      final loC = avg - 3;
+      final hiC = avg + 3;
+      final loStr = formatTemperature(loC, tempUnits);
+      final hiStr = formatTemperature(hiC, tempUnits);
+      tempBucket = '${_stripUnit(loStr)}–$hiStr water';
     }
     result.add(ConditionsCorrelation(
       species: entry.key,
@@ -89,3 +94,11 @@ final conditionsCorrelationProvider =
   }
   return result;
 });
+
+/// Drops the trailing °C / °F so we can build "12–18°C water"-style
+/// ranges without repeating the unit on the low end.
+String _stripUnit(String formatted) {
+  return formatted
+      .replaceAll('°C', '')
+      .replaceAll('°F', '');
+}

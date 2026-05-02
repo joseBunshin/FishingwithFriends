@@ -10,6 +10,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeModeProvider);
     final units = ref.watch(displayUnitsProvider);
+    final temp = ref.watch(temperatureUnitsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -61,6 +62,27 @@ class SettingsScreen extends ConsumerWidget {
               selected: {units},
               onSelectionChanged: (s) =>
                   ref.read(displayUnitsProvider.notifier).set(s.first),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Divider(),
+          const _Section(title: 'Temperature'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: SegmentedButton<TemperatureUnits>(
+              segments: const [
+                ButtonSegment(
+                  value: TemperatureUnits.fahrenheit,
+                  label: Text('°F'),
+                ),
+                ButtonSegment(
+                  value: TemperatureUnits.celsius,
+                  label: Text('°C'),
+                ),
+              ],
+              selected: {temp},
+              onSelectionChanged: (s) =>
+                  ref.read(temperatureUnitsProvider.notifier).set(s.first),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
