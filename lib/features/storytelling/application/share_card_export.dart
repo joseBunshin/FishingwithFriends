@@ -9,7 +9,7 @@ import 'package:fishing_with_friends/features/storytelling/presentation/widgets/
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:flutter/services.dart' show NetworkAssetBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -76,9 +76,13 @@ class ShareCardExporter {
   }
 
   Future<Uint8List?> _prefetch(String url) async {
+    // NetworkAssetBundle works on web AND mobile — it's just an HTTP
+    // GET behind ByteData. Avoids `dart:io.File` which doesn't exist on
+    // web, and avoids depending on flutter_cache_manager just for this.
     try {
-      final file = await DefaultCacheManager().getSingleFile(url);
-      return file.readAsBytes();
+      final bundle = NetworkAssetBundle(Uri.parse(url));
+      final byteData = await bundle.load('');
+      return byteData.buffer.asUint8List();
     } on Exception {
       return null;
     }
