@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
@@ -11,6 +13,7 @@ class ShareCard extends StatelessWidget {
   const ShareCard({
     required this.catch_,
     required this.photoUrl,
+    this.photoBytes,
     super.key,
   });
 
@@ -19,6 +22,11 @@ class ShareCard extends StatelessWidget {
   /// Signed URL for the cover photo, or null when unavailable.
   /// When null the card renders a navy fallback panel in place of the photo.
   final String? photoUrl;
+
+  /// Pre-fetched photo bytes. When set, the card renders synchronously
+  /// from memory instead of racing the network. The exporter pre-warms
+  /// this so the offscreen capture isn't a blank navy panel.
+  final Uint8List? photoBytes;
 
   static const double width = 1080;
   static const double height = 1920;
@@ -35,7 +43,7 @@ class ShareCard extends StatelessWidget {
           children: [
             Expanded(
               flex: 6,
-              child: _Photo(photoUrl: photoUrl),
+              child: _Photo(photoUrl: photoUrl, photoBytes: photoBytes),
             ),
             Expanded(
               flex: 4,
@@ -49,28 +57,42 @@ class ShareCard extends StatelessWidget {
 }
 
 class _Photo extends StatelessWidget {
-  const _Photo({this.photoUrl});
+  const _Photo({this.photoUrl, this.photoBytes});
   final String? photoUrl;
+  final Uint8List? photoBytes;
 
   @override
   Widget build(BuildContext context) {
-    if (photoUrl == null) {
-      return const ColoredBox(
-        color: AppColors.navyDeep,
-        child: Center(
-          child: Icon(Icons.set_meal, size: 200, color: AppColors.orange),
-        ),
+    // Prefer pre-fetched bytes (offscreen capture path) — synchronous
+    // and avoids the placeholder race against `toImage()`.
+    if (photoBytes != null) {
+      return Image.memory(
+        photoBytes!,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const _PhotoFallback(),
       );
+    }
+    if (photoUrl == null) {
+      return const _PhotoFallback();
     }
     return CachedNetworkImage(
       imageUrl: photoUrl!,
       fit: BoxFit.cover,
       placeholder: (_, __) => const ColoredBox(color: AppColors.navyDeep),
-      errorWidget: (_, __, ___) => const ColoredBox(
-        color: AppColors.navyDeep,
-        child: Center(
-          child: Icon(Icons.set_meal, size: 200, color: AppColors.orange),
-        ),
+      errorWidget: (_, __, ___) => const _PhotoFallback(),
+    );
+  }
+}
+
+class _PhotoFallback extends StatelessWidget {
+  const _PhotoFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: AppColors.navyDeep,
+      child: Center(
+        child: Icon(Icons.set_meal, size: 200, color: AppColors.orange),
       ),
     );
   }

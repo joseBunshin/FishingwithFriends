@@ -1,3 +1,4 @@
+import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/core/units/measurement_format.dart';
@@ -5,6 +6,7 @@ import 'package:fishing_with_friends/features/catches/data/catches_repository_pr
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/catch_photo_carousel.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/conditions_block.dart';
+import 'package:fishing_with_friends/features/catches/presentation/widgets/delete_catch_sheet.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_list.dart';
 import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:fishing_with_friends/features/storytelling/application/share_card_export.dart';
@@ -36,13 +38,15 @@ class CatchDetailScreen extends ConsumerWidget {
   }
 }
 
-class _Body extends StatelessWidget {
+class _Body extends ConsumerWidget {
   const _Body({required this.catch_});
 
   final Catch catch_;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final me = ref.watch(currentUserProvider);
+    final isMine = me != null && me.id == catch_.anglerId;
     return CustomScrollView(
       slivers: [
         SliverAppBar(
@@ -64,6 +68,30 @@ class _Body extends StatelessWidget {
                 source: catch_,
               ),
             ),
+            if (isMine)
+              PopupMenuButton<String>(
+                tooltip: 'More',
+                icon: const Icon(Icons.more_vert),
+                onSelected: (key) async {
+                  if (key == 'delete') {
+                    final deleted = await DeleteCatchSheet.show(
+                      context,
+                      catch_: catch_,
+                    );
+                    if (deleted && context.mounted) context.pop();
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.delete_outline),
+                      title: Text('Delete catch'),
+                    ),
+                  ),
+                ],
+              ),
           ],
           flexibleSpace: FlexibleSpaceBar(
             background: CatchPhotoCarousel(

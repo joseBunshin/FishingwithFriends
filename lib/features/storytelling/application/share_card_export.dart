@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -5,40 +6,62 @@ import 'dart:ui' as ui;
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/share_card.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Builds a transient ShareCard offscreen, captures it via RepaintBoundary,
-/// writes the PNG to a temp file, and hands it to share_plus. Returns the
-/// temp-file path on success, null on degraded paths (no photo URL available
-/// is fine — share card still composes against a fallback panel).
+/// and shares it. On mobile this writes a PNG to the temp directory and
+/// hands the path to share_plus. On web that path doesn't exist —
+/// `path_provider` throws — so we share the bytes directly via
+/// `XFile.fromData`, which falls through to the browser's Web Share API
+/// or its download fallback.
 class ShareCardExporter {
   ShareCardExporter(this._ref);
   final Ref _ref;
 
-  Future<String?> exportAndShare({
+  Future<bool> exportAndShare({
     required BuildContext context,
     required Catch catch_,
   }) async {
     final photoUrl = await _resolvePhotoUrl(catch_);
-    final bytes = await _capture(catch_, photoUrl);
-    if (bytes == null) return null;
+    // Pre-warm the image cache so the offscreen render doesn't race the
+    // network. Without this, `CachedNetworkImage` shows its placeholder
+    // and we capture a blank navy panel.
+    final photoBytes = photoUrl == null ? null : await _prefetch(photoUrl);
+    final bytes = await _capture(catch_, photoUrl, photoBytes);
+    if (bytes == null) return false;
+
+    final fileName =
+        'fwf-share-${catch_.id}-${DateTime.now().millisecondsSinceEpoch}.png';
+
+    if (kIsWeb) {
+      await Share.shareXFiles(
+        [
+          XFile.fromData(
+            bytes,
+            mimeType: 'image/png',
+            name: fileName,
+          ),
+        ],
+        subject: 'My catch on Fishing with Friends',
+      );
+      return true;
+    }
 
     final dir = await getTemporaryDirectory();
-    final file = File(
-      '${dir.path}/fwf-share-${catch_.id}-${DateTime.now().millisecondsSinceEpoch}.png',
-    );
+    final file = File('${dir.path}/$fileName');
     await file.writeAsBytes(bytes);
-
-    if (!context.mounted) return file.path;
+    if (!context.mounted) return true;
     await Share.shareXFiles(
       [XFile(file.path, mimeType: 'image/png')],
       subject: 'My catch on Fishing with Friends',
     );
-    return file.path;
+    return true;
   }
 
   Future<String?> _resolvePhotoUrl(Catch catch_) async {
@@ -52,7 +75,20 @@ class ShareCardExporter {
     }
   }
 
-  Future<Uint8List?> _capture(Catch catch_, String? photoUrl) async {
+  Future<Uint8List?> _prefetch(String url) async {
+    try {
+      final file = await DefaultCacheManager().getSingleFile(url);
+      return file.readAsBytes();
+    } on Exception {
+      return null;
+    }
+  }
+
+  Future<Uint8List?> _capture(
+    Catch catch_,
+    String? photoUrl,
+    Uint8List? photoBytes,
+  ) async {
     final repaint = RenderRepaintBoundary();
     final pipelineOwner = PipelineOwner();
     final buildOwner = BuildOwner(focusManager: FocusManager());
@@ -78,7 +114,11 @@ class ShareCardExporter {
       container: repaint,
       child: Directionality(
         textDirection: TextDirection.ltr,
-        child: ShareCard(catch_: catch_, photoUrl: photoUrl),
+        child: ShareCard(
+          catch_: catch_,
+          photoUrl: photoUrl,
+          photoBytes: photoBytes,
+        ),
       ),
     ).attachToRenderTree(buildOwner);
 

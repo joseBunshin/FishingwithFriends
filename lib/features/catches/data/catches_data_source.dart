@@ -16,6 +16,10 @@ abstract class CatchesDataSource {
   /// to `catches_friend_view` (friend path). Returns `null` when neither
   /// row is visible under RLS.
   Future<Map<String, dynamic>?> selectById(String id);
+
+  /// Delete a catch by id. RLS restricts this to the owner; non-owners
+  /// silently see zero rows affected.
+  Future<void> deleteCatch(String id);
 }
 
 class SupabaseCatchesDataSource implements CatchesDataSource {
@@ -82,5 +86,10 @@ class SupabaseCatchesDataSource implements CatchesDataSource {
         .eq('id', id)
         .maybeSingle();
     return friendRow;
+  }
+
+  @override
+  Future<void> deleteCatch(String id) async {
+    await _client.from('catches').delete().eq('id', id);
   }
 }

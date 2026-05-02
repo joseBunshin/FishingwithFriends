@@ -113,6 +113,9 @@ class _StubDataSource implements CatchesDataSource {
 
   @override
   Future<Map<String, dynamic>?> selectById(String id) async => null;
+
+  @override
+  Future<void> deleteCatch(String id) async {}
 }
 
 CatchInput _validInput() => CatchInput(

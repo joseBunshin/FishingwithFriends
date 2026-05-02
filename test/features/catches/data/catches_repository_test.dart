@@ -72,6 +72,11 @@ class _RecordingDataSource implements CatchesDataSource {
     return byId;
   }
 
+  @override
+  Future<void> deleteCatch(String id) async {
+    calls.add('deleteCatch($id)');
+  }
+
   /// The real Supabase insert returns the row with server-populated columns
   /// (created_at, updated_at, photo_paths echoed back). Mirror that shape.
   Map<String, dynamic> _hydrateInsertedRow(Map<String, dynamic> input) {

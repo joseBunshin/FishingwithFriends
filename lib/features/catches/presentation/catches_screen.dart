@@ -4,6 +4,7 @@ import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/catch_card.dart';
+import 'package:fishing_with_friends/features/catches/presentation/widgets/delete_catch_sheet.dart';
 import 'package:fishing_with_friends/features/sync/presentation/widgets/sync_pill.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,6 +78,7 @@ class _CatchesGrid extends StatelessWidget {
                 return CatchCard(
                   catch_: c,
                   onTap: () => context.push('/catches/${c.id}'),
+                  onLongPress: () => DeleteCatchSheet.show(context, catch_: c),
                 );
               },
               childCount: catches.length,

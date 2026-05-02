@@ -102,4 +102,18 @@ class CatchesRepository {
       throw NetworkFailure('Failed to load catch: ${e.message}', cause: e);
     }
   }
+
+  /// Delete a catch the current user owns. RLS prevents anyone else from
+  /// seeing the row affected, so a friend trying this hits a no-op rather
+  /// than an error.
+  Future<void> delete(String id) async {
+    if (id.isEmpty) {
+      throw const ValidationFailure('Missing catch id.');
+    }
+    try {
+      await dataSource.deleteCatch(id);
+    } on PostgrestException catch (e) {
+      throw NetworkFailure('Failed to delete catch: ${e.message}', cause: e);
+    }
+  }
 }

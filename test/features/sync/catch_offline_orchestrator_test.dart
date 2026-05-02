@@ -61,6 +61,8 @@ class _FakeCatchesDataSource implements CatchesDataSource {
       [];
   @override
   Future<Map<String, dynamic>?> selectById(String id) async => null;
+  @override
+  Future<void> deleteCatch(String id) async {}
 }
 
 class _FailingDataSource extends _FakeCatchesDataSource {

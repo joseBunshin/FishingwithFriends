@@ -13,10 +13,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Hero-tagged with `catch-photo-<id>` so the detail screen transitions
 /// from the same image.
 class CatchCard extends ConsumerWidget {
-  const CatchCard({required this.catch_, this.onTap, super.key});
+  const CatchCard({
+    required this.catch_,
+    this.onTap,
+    this.onLongPress,
+    super.key,
+  });
 
   final Catch catch_;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,6 +33,7 @@ class CatchCard extends ConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
