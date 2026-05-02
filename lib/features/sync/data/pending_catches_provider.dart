@@ -4,13 +4,18 @@ import 'package:drift/drift.dart';
 import 'package:fishing_with_friends/core/local_db/local_database.dart';
 import 'package:fishing_with_friends/core/local_db/local_database_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Pending (queued, not-yet-synced) catches read straight from the
 /// `catches_cache` drift table. Lives here, not in the catches feature,
 /// so the catches_repository_provider can consume it without importing
 /// the offline orchestrator (which would form a cycle).
+///
+/// On web the offline stack is disabled (drift requires a WASM bundle
+/// we don't ship); always emits an empty list there.
 final pendingCatchesProvider = StreamProvider<List<Catch>>((ref) {
+  if (kIsWeb) return Stream.value(const <Catch>[]);
   final db = ref.watch(localDatabaseProvider);
   final query = db.select(db.catchesCache)
     ..where((t) => t.isPending.equals(true))

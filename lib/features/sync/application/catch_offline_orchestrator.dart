@@ -16,6 +16,7 @@ import 'package:fishing_with_friends/features/sync/application/sync_orchestrator
 import 'package:fishing_with_friends/features/sync/data/outbox_repository.dart';
 import 'package:fishing_with_friends/features/sync/data/outbox_repository_provider.dart';
 import 'package:fishing_with_friends/features/sync/domain/outbox_op.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -62,6 +63,14 @@ class CatchOfflineOrchestrator {
       throw const ValidationFailure(
         'At least one photo is required to log a catch.',
       );
+    }
+
+    // Web bypass: drift requires a WASM bundle we don't ship and
+    // path_provider can't write to local disk. Skip the offline stack
+    // entirely and call the repo direct — web is a dev convenience,
+    // not an offline-supported surface.
+    if (kIsWeb) {
+      return repo.create(input, anglerId: anglerId);
     }
 
     final online = await connectivity.isOnline();

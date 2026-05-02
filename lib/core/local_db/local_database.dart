@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:fishing_with_friends/core/local_db/tables/catches_cache.dart';
 import 'package:fishing_with_friends/core/local_db/tables/outbox.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 part 'local_database.g.dart';
 
@@ -23,5 +24,16 @@ class LocalDatabase extends _$LocalDatabase {
 }
 
 QueryExecutor _openConnection() {
-  return driftDatabase(name: 'fwf_local_db');
+  // On web we provide DriftWebOptions to satisfy the constructor, but the
+  // offline-first stack is gated behind kIsWeb upstream — no queries
+  // actually run, so the WASM bundle is never loaded.
+  return driftDatabase(
+    name: 'fwf_local_db',
+    web: kIsWeb
+        ? DriftWebOptions(
+            sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+            driftWorker: Uri.parse('drift_worker.js'),
+          )
+        : null,
+  );
 }
