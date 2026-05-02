@@ -1,15 +1,76 @@
+import 'package:drift/drift.dart' hide isNotNull, isNull;
+import 'package:drift/native.dart';
 import 'package:fishing_with_friends/core/error/app_exception.dart';
+import 'package:fishing_with_friends/core/local_db/local_database.dart';
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/features/catches/application/save_catch_controller.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_data_source.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/data/photo_storage.dart';
+import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch_input.dart';
+import 'package:fishing_with_friends/features/sync/application/catch_offline_orchestrator.dart';
+import 'package:fishing_with_friends/features/sync/application/connectivity_service.dart';
+import 'package:fishing_with_friends/features/sync/application/sync_orchestrator.dart';
+import 'package:fishing_with_friends/features/sync/data/outbox_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+class _AlwaysOnlineConnectivity implements ConnectivityService {
+  @override
+  Future<bool> isOnline() async => true;
+  @override
+  Stream<bool> onlineStream() => const Stream<bool>.empty();
+}
+
+/// Pass-through orchestrator that defers to the repo. Lets the
+/// controller tests avoid wiring drift + path_provider — those paths
+/// have their own dedicated tests in
+/// `test/features/sync/catch_offline_orchestrator_test.dart`.
+class _FakeOrchestrator extends CatchOfflineOrchestrator {
+  _FakeOrchestrator(this._repo)
+      : super(
+          repo: _repo,
+          outbox: _NullOutbox(),
+          connectivity: _AlwaysOnlineConnectivity(),
+          localDb: _NullDb(),
+          syncOrchestrator: _NullSync(),
+        );
+
+  final CatchesRepository _repo;
+
+  @override
+  Future<Catch> create(CatchInput input, {required String anglerId}) {
+    return _repo.create(input, anglerId: anglerId);
+  }
+}
+
+class _NullOutbox extends OutboxRepository {
+  _NullOutbox() : super(_NullDb());
+}
+
+class _NullDb extends LocalDatabase {
+  _NullDb()
+      : super.forTesting(
+          DatabaseConnection(NativeDatabase.memory()),
+        );
+}
+
+class _NullSync extends SyncOrchestrator {
+  _NullSync()
+      : super(
+          outbox: _NullOutbox(),
+          connectivity: _AlwaysOnlineConnectivity(),
+          photoStorage: _StubPhotoStorage(),
+          catchesDataSource: _StubDataSource(),
+          entrySubmit: _noEntrySubmit,
+        );
+
+  static Future<void> _noEntrySubmit(_, __, ___) async {}
+}
 
 class _StubPhotoStorage implements PhotoStorage {
   @override
@@ -80,6 +141,9 @@ ProviderContainer _container({
           storage: ref.watch(photoStorageProvider),
         ),
       ),
+      catchOfflineOrchestratorProvider.overrideWith(
+        (ref) => _FakeOrchestrator(ref.watch(catchesRepositoryProvider)),
+      ),
     ],
   );
   addTearDown(container.dispose);
@@ -125,6 +189,9 @@ void main() {
     });
 
     test('insert fails → AsyncError(NetworkFailure), returns null', () async {
+      // Test against the pass-through orchestrator (online direct path).
+      // Offline degradation is covered separately in
+      // catch_offline_orchestrator_test.dart.
       final ds = _StubDataSource()..throwOnInsert = true;
       final container = _container(user: _fakeUser('angler-1'), dataSource: ds);
       final controller = container.read(saveCatchControllerProvider.notifier);

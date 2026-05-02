@@ -5,6 +5,7 @@ import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch_input.dart';
+import 'package:fishing_with_friends/features/sync/application/catch_offline_orchestrator.dart';
 import 'package:fishing_with_friends/features/trips/data/trips_repository_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -57,9 +58,9 @@ class SaveCatchController extends AsyncNotifier<void> {
             );
 
       final saved = await ref
-          .read(catchesRepositoryProvider)
+          .read(catchOfflineOrchestratorProvider)
           .create(stamped, anglerId: user.id);
-      ref.invalidate(myCatchesProvider);
+      ref.invalidate(syncedMyCatchesProvider);
       state = const AsyncData(null);
       return saved;
     } on AppException catch (e, st) {
