@@ -1,5 +1,7 @@
 import 'package:fishing_with_friends/core/router/app_shell.dart';
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
+import 'package:fishing_with_friends/features/auth/presentation/forgot_password_screen.dart';
+import 'package:fishing_with_friends/features/auth/presentation/reset_password_screen.dart';
 import 'package:fishing_with_friends/features/auth/presentation/sign_in_screen.dart';
 import 'package:fishing_with_friends/features/catches/presentation/catch_detail_screen.dart';
 import 'package:fishing_with_friends/features/catches/presentation/catch_log_screen.dart';
@@ -30,6 +32,8 @@ class AppRoutes {
 
   static const splash = '/splash';
   static const signIn = '/sign-in';
+  static const forgotPassword = '/forgot-password';
+  static const resetPassword = '/reset-password';
   static const onboarding = '/onboarding';
   static const home = '/home';
   static const catches = '/catches';
@@ -56,10 +60,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       final goingToSignIn = state.matchedLocation == AppRoutes.signIn;
       final goingToOnboarding =
           state.matchedLocation == AppRoutes.onboarding;
+      final goingToForgot =
+          state.matchedLocation == AppRoutes.forgotPassword;
+      final goingToReset =
+          state.matchedLocation == AppRoutes.resetPassword;
 
       // The splash screen owns the route hand-off itself once its
       // animation completes — never redirect away from it.
       if (goingToSplash) return null;
+
+      // The reset-password screen is reached via the email recovery
+      // deep link. The user IS signed in at this point (Supabase
+      // exchanges the recovery token for a session), but we must let
+      // them set a new password before pushing them into the app.
+      if (goingToReset) return null;
+
+      // Forgot-password is reachable while signed out so users who
+      // can't get in can still recover.
+      if (goingToForgot) return null;
 
       if (!isSignedIn && !goingToSignIn) return AppRoutes.signIn;
       if (isSignedIn && goingToSignIn) return AppRoutes.home;
@@ -93,6 +111,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.signIn,
         builder: (_, __) => const SignInScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (_, __) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.resetPassword,
+        builder: (_, __) => const ResetPasswordScreen(),
       ),
       GoRoute(
         path: AppRoutes.onboarding,

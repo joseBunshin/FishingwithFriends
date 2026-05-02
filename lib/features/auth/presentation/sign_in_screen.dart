@@ -1,8 +1,12 @@
+import 'package:fishing_with_friends/core/router/app_router.dart';
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/features/auth/domain/password_policy.dart';
+import 'package:fishing_with_friends/features/auth/presentation/widgets/password_criteria_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
@@ -18,7 +22,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _passwordCtl = TextEditingController();
   bool _isSignUp = false;
   bool _busy = false;
+  bool _justSignedUp = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordCtl.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -32,6 +43,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _justSignedUp = false;
     });
     try {
       final auth = ref.read(supabaseClientProvider).auth;
@@ -40,6 +52,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           email: _emailCtl.text.trim(),
           password: _passwordCtl.text,
         );
+        if (!mounted) return;
+        // Supabase returns a session-less user when email confirmation
+        // is enabled. Show a confirmation hint and stay on sign-in.
+        setState(() {
+          _justSignedUp = true;
+          _isSignUp = false;
+          _passwordCtl.clear();
+        });
       } else {
         await auth.signInWithPassword(
           email: _emailCtl.text.trim(),
@@ -82,6 +102,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
+                    if (_justSignedUp) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _ConfirmEmailNotice(email: _emailCtl.text.trim()),
+                    ],
                     const SizedBox(height: AppSpacing.xl),
                     TextFormField(
                       controller: _emailCtl,
@@ -102,18 +126,49 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     TextFormField(
                       controller: _passwordCtl,
                       obscureText: true,
-                      autofillHints: const [AutofillHints.password],
+                      autofillHints: _isSignUp
+                          ? const [AutofillHints.newPassword]
+                          : const [AutofillHints.password],
                       decoration: const InputDecoration(
                         labelText: 'Password',
                         prefixIcon: Icon(Icons.lock_outline),
                       ),
                       validator: (v) {
-                        if (v == null || v.length < 8) {
-                          return 'At least 8 characters';
+                        if (v == null || v.isEmpty) {
+                          return 'Enter your password';
+                        }
+                        if (_isSignUp) {
+                          // Sign-up enforces full policy; sign-in only
+                          // checks non-empty so existing accounts with
+                          // legacy-shaped passwords can still log in.
+                          final fail = PasswordPolicy.firstFailure(v);
+                          if (fail != null) return ' ';
                         }
                         return null;
                       },
                     ),
+                    if (_isSignUp) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      PasswordCriteriaPanel(password: _passwordCtl.text),
+                    ],
+                    if (!_isSignUp) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _busy
+                              ? null
+                              : () => context.push(AppRoutes.forgotPassword),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 32),
+                            tapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text('Forgot password?'),
+                        ),
+                      ),
+                    ],
                     if (_error != null) ...[
                       const SizedBox(height: AppSpacing.md),
                       Text(
@@ -145,7 +200,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     TextButton(
                       onPressed: _busy
                           ? null
-                          : () => setState(() => _isSignUp = !_isSignUp),
+                          : () => setState(() {
+                                _isSignUp = !_isSignUp;
+                                _justSignedUp = false;
+                                _error = null;
+                              }),
                       child: Text(
                         _isSignUp
                             ? 'Have an account? Sign in'
@@ -194,6 +253,41 @@ class _Brand extends StatelessWidget {
               ),
         ),
       ],
+    );
+  }
+}
+
+class _ConfirmEmailNotice extends StatelessWidget {
+  const _ConfirmEmailNotice({required this.email});
+  final String email;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: AppColors.success.withValues(alpha: 0.40),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.mark_email_unread_outlined,
+            color: AppColors.success,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'Check $email — tap the blue fish to confirm your '
+              'address, then sign in.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
