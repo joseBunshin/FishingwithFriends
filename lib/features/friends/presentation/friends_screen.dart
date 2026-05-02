@@ -439,20 +439,56 @@ class _FriendRow extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove friend?'),
-        content: const Text(
-          "You'll stop seeing each other's catches.",
+        contentPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.xl,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.xl,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Remove'),
-          ),
-        ],
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Remove friend?',
+                    style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.3,
+                        ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Cancel',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => Navigator.pop(ctx, false),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              "You'll stop seeing each other's catches.",
+              style: Theme.of(ctx).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  foregroundColor: AppColors.white,
+                  minimumSize: const Size.fromHeight(48),
+                ),
+                child: const Text('Remove friend'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
     if (confirmed ?? false) {

@@ -2,10 +2,10 @@ import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/core/units/measurement_format.dart';
+import 'package:fishing_with_friends/core/widgets/section_label.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/catch_photo_carousel.dart';
-import 'package:fishing_with_friends/features/catches/presentation/widgets/conditions_block.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/delete_catch_sheet.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/location_map_card.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_list.dart';
@@ -120,23 +120,15 @@ class _Body extends ConsumerWidget {
                 _LocationBlock(catch_: catch_),
                 const SizedBox(height: AppSpacing.md),
                 _CaughtAtRow(caughtAt: catch_.caughtAt),
-                if (catch_.conditions.isNotEmpty) ...[
+                if (_hasAnyDetail(catch_)) ...[
+                  const SizedBox(height: AppSpacing.xl),
+                  const SectionLabel('Details'),
                   const SizedBox(height: AppSpacing.md),
-                  ConditionsBlock(conditions: catch_.conditions),
-                ],
-                if (catch_.rig != null && catch_.rig!.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  _LabeledLine(label: 'Rig', value: catch_.rig!),
-                ],
-                if (catch_.notes != null && catch_.notes!.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  _NotesBlock(notes: catch_.notes!),
+                  _DetailsCard(catch_: catch_),
                 ],
                 const SizedBox(height: AppSpacing.xl),
-                Text(
-                  'Comments',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                const SectionLabel('Comments'),
+                const SizedBox(height: AppSpacing.sm),
                 CommentList(catchId: catch_.id),
                 const Divider(),
                 CommentComposer(catchId: catch_.id),
@@ -316,7 +308,9 @@ class _MeasurementPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final bg = emphasized ? AppColors.orange : scheme.surfaceContainerHighest;
+    // Emphasized = the headline metric (weight). Renders as a filled
+    // navy chip to match the global navy-CTA language.
+    final bg = emphasized ? AppColors.navy : scheme.surfaceContainerHighest;
     final fg = emphasized ? AppColors.white : scheme.onSurface;
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -431,54 +425,281 @@ class _CaughtAtRow extends StatelessWidget {
   }
 }
 
-class _LabeledLine extends StatelessWidget {
-  const _LabeledLine({required this.label, required this.value});
+/// True when at least one of rig / notes / conditions has content. Used
+/// to decide whether to render the consolidated _DetailsCard at all.
+bool _hasAnyDetail(Catch c) {
+  final hasRig = c.rig != null && c.rig!.isNotEmpty;
+  final hasNotes = c.notes != null && c.notes!.isNotEmpty;
+  final hasConditions = c.conditions.isNotEmpty;
+  return hasRig || hasNotes || hasConditions;
+}
+
+/// Single card that consolidates the catch's optional metadata —
+/// rig, notes, conditions — under one tile with small-caps sub-sections
+/// separated by hairlines. Replaces the three separate cards that read
+/// disjointed before.
+class _DetailsCard extends StatelessWidget {
+  const _DetailsCard({required this.catch_});
+
+  final Catch catch_;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final children = <Widget>[];
+
+    final rig = catch_.rig;
+    if (rig != null && rig.isNotEmpty) {
+      children.add(_DetailRow(label: 'Rig', value: rig));
+    }
+    final notes = catch_.notes;
+    if (notes != null && notes.isNotEmpty) {
+      if (children.isNotEmpty) children.add(const _DetailDivider());
+      children.add(_DetailRow(label: 'Notes', value: notes));
+    }
+    if (catch_.conditions.isNotEmpty) {
+      final pills = _conditionPills(catch_.conditions);
+      if (pills.isNotEmpty) {
+        if (children.isNotEmpty) children.add(const _DetailDivider());
+        children.add(_ConditionsRow(pills: pills));
+      }
+    }
+
+    if (children.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
 
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(value, style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+              color: AppColors.slate,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  height: 1.4,
+                ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _NotesBlock extends StatelessWidget {
-  const _NotesBlock({required this.notes});
+class _ConditionsRow extends StatelessWidget {
+  const _ConditionsRow({required this.pills});
 
-  final String notes;
+  final List<_ConditionPill> pills;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Notes',
-              style: Theme.of(context).textTheme.titleSmall,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'CONDITIONS',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+              color: AppColors.slate,
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(notes, style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              for (final p in pills) _ConditionChip(pill: p),
+            ],
+          ),
+        ],
       ),
     );
   }
+}
+
+class _DetailDivider extends StatelessWidget {
+  const _DetailDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      color: Theme.of(context).colorScheme.outlineVariant,
+    );
+  }
+}
+
+@immutable
+class _ConditionPill {
+  const _ConditionPill({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+}
+
+class _ConditionChip extends StatelessWidget {
+  const _ConditionChip({required this.pill});
+
+  final _ConditionPill pill;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.navy.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(pill.icon, size: 14, color: AppColors.navy),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            pill.label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+List<_ConditionPill> _conditionPills(Map<String, dynamic> conditions) {
+  final out = <_ConditionPill>[];
+  final tempC = conditions['temp_c'];
+  if (tempC is num) {
+    out.add(_ConditionPill(
+      icon: Icons.thermostat_outlined,
+      label: '${tempC.toStringAsFixed(0)}°C',
+    ));
+  }
+  final wind = conditions['wind_kph'];
+  if (wind is num) {
+    out.add(_ConditionPill(
+      icon: Icons.air,
+      label: '${wind.toStringAsFixed(0)} kph',
+    ));
+  }
+  final waterTemp = conditions['water_temp_c'];
+  if (waterTemp is num) {
+    out.add(_ConditionPill(
+      icon: Icons.waves,
+      label: 'water ${waterTemp.toStringAsFixed(0)}°C',
+    ));
+  }
+  final tide = conditions['tide_state'];
+  if (tide is String) {
+    out.add(_ConditionPill(
+      icon: Icons.water_drop_outlined,
+      label: '$tide tide',
+    ));
+  }
+  final tideObj = conditions['tide'];
+  if (tideObj is Map<String, dynamic>) {
+    final phase = tideObj['phase'];
+    if (phase is String) {
+      out.add(_ConditionPill(
+        icon: Icons.water_drop_outlined,
+        label: '$phase tide',
+      ));
+    }
+  }
+  final sky = conditions['weather'];
+  if (sky is Map<String, dynamic>) {
+    final s = sky['sky'];
+    if (s is String) {
+      out.add(_ConditionPill(
+        icon: _skyIcon(s),
+        label: s.replaceAll('_', ' '),
+      ));
+    }
+    final t = sky['temp_c'];
+    if (t is num) {
+      out.add(_ConditionPill(
+        icon: Icons.thermostat_outlined,
+        label: '${t.toStringAsFixed(0)}°C',
+      ));
+    }
+  }
+  final moon = conditions['moon_phase'];
+  if (moon is num) {
+    out.add(_ConditionPill(
+      icon: Icons.brightness_3,
+      label: _moonLabel(moon.toDouble()),
+    ));
+  }
+  final moonStr = conditions['moon'];
+  if (moonStr is String) {
+    out.add(_ConditionPill(
+      icon: Icons.brightness_3,
+      label: moonStr.replaceAll('_', ' '),
+    ));
+  }
+  return out;
+}
+
+IconData _skyIcon(String sky) {
+  return switch (sky) {
+    'clear' => Icons.wb_sunny_outlined,
+    'partly_cloudy' => Icons.wb_cloudy_outlined,
+    'overcast' => Icons.cloud_outlined,
+    'rain' => Icons.water_drop_outlined,
+    _ => Icons.cloud_outlined,
+  };
+}
+
+String _moonLabel(double phase) {
+  if (phase < 0.05 || phase > 0.95) return 'New moon';
+  if (phase < 0.20) return 'Waxing crescent';
+  if (phase < 0.30) return 'First quarter';
+  if (phase < 0.45) return 'Waxing gibbous';
+  if (phase < 0.55) return 'Full moon';
+  if (phase < 0.70) return 'Waning gibbous';
+  if (phase < 0.80) return 'Last quarter';
+  return 'Waning crescent';
 }
 
 class _Loading extends StatelessWidget {

@@ -80,8 +80,11 @@ class AppTheme {
         shadowColor: AppColors.navy.withValues(alpha: 0.06),
         shape: RoundedRectangleBorder(
           // Sharper than radiusLg — matches the modernized profile/friends
-          // visual language that we're rolling out app-wide.
+          // visual language that we're rolling out app-wide. Hairline
+          // outlineVariant border so cards feel like deliberate tiles
+          // (StatTile pattern) instead of floating bubbles.
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          side: BorderSide(color: scheme.outlineVariant),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
