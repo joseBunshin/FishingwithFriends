@@ -51,5 +51,9 @@ coverage/
 # Stray manual screenshots / browser captures dropped at repo root
 .live*.png
 
+# Local reference assets — Lovable screenshots, design refs, broken-UI
+# captures. Useful as developer scratchpad, not part of the shipped repo.
+Assests/
+
 # Misc
 *.log
