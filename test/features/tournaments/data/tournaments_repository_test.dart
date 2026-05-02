@@ -38,6 +38,13 @@ class _FakeDataSource implements TournamentsDataSource {
   @override
   Future<List<Map<String, dynamic>>> selectMine(String anglerId) async => const [];
 
+  bool deletedCalled = false;
+
+  @override
+  Future<void> deleteTournament(String tournamentId) async {
+    deletedCalled = true;
+  }
+
   @override
   Future<Map<String, dynamic>> updateClose(String tournamentId) async {
     final now = DateTime.now().toUtc().toIso8601String();

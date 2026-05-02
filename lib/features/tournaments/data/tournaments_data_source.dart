@@ -9,6 +9,7 @@ abstract class TournamentsDataSource {
   Future<Map<String, dynamic>?> selectById(String id);
   Future<List<Map<String, dynamic>>> selectMine(String anglerId);
   Future<Map<String, dynamic>> updateClose(String tournamentId);
+  Future<void> deleteTournament(String tournamentId);
 
   Future<List<Map<String, dynamic>>> insertMembers(
     List<Map<String, dynamic>> rows,
@@ -89,6 +90,11 @@ class SupabaseTournamentsDataSource implements TournamentsDataSource {
         .eq('id', tournamentId)
         .select(_tournamentColumns)
         .single();
+  }
+
+  @override
+  Future<void> deleteTournament(String tournamentId) async {
+    await _client.from('tournaments').delete().eq('id', tournamentId);
   }
 
   @override

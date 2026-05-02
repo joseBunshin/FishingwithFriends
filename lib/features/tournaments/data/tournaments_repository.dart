@@ -79,6 +79,17 @@ class TournamentsRepository {
     }
   }
 
+  /// Hard-delete the tournament. RLS restricts this to the creator.
+  /// Members + entries cascade-delete via the FK constraints in 0001.
+  Future<void> deleteTournament(String tournamentId) async {
+    try {
+      await dataSource.deleteTournament(tournamentId);
+    } on PostgrestException catch (e) {
+      throw NetworkFailure('Failed to delete tournament: ${e.message}',
+          cause: e);
+    }
+  }
+
   /// Look up a tournament by code and request membership. Returns the
   /// tournament on success. Validation surface intentionally identical
   /// for "no tournament with that code" and "RLS denied" so attackers
