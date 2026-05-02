@@ -1,11 +1,47 @@
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
+import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/features/notifications/data/notifications_repository_provider.dart';
 import 'package:fishing_with_friends/features/profile/data/my_profile_repository_provider.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/badge_wall.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/streak_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+/// Renders the unread-count badge + chevron for the Notifications tile.
+class _NotificationsTrailing extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(unreadNotificationCountProvider);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (unread > 0)
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: 2,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.orange,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              unread > 99 ? '99+' : '$unread',
+              style: const TextStyle(
+                color: AppColors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        const SizedBox(width: AppSpacing.xs),
+        const Icon(Icons.chevron_right),
+      ],
+    );
+  }
+}
 
 class MeScreen extends ConsumerWidget {
   const MeScreen({super.key});
@@ -88,10 +124,11 @@ class MeScreen extends ConsumerWidget {
                   onTap: () => context.push('/me/edit'),
                 ),
                 const Divider(height: 1),
-                const ListTile(
-                  leading: Icon(Icons.notifications_outlined),
-                  title: Text('Notifications'),
-                  trailing: Icon(Icons.chevron_right),
+                ListTile(
+                  leading: const Icon(Icons.notifications_outlined),
+                  title: const Text('Notifications'),
+                  trailing: _NotificationsTrailing(),
+                  onTap: () => context.push('/me/notifications'),
                 ),
                 const Divider(height: 1),
                 const ListTile(
