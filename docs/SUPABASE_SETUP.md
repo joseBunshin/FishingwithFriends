@@ -36,6 +36,7 @@ Open **SQL Editor → New query** and run, in order:
 11. `supabase/migrations/0011_fwf_app_settings_fallback.sql` — table-backed `fwf_setting()` fallback for environments where the dashboard SQL Editor can't `alter database postgres set ...`. Insert key/value rows into `public.fwf_app_settings` instead.
 12. `supabase/migrations/0012_conditions_search_path_fix.sql` — adds `extensions` to the conditions trigger function's `search_path` so PostGIS types resolve.
 13. `supabase/migrations/0013_profile_onboarding_columns.sql` — adds `home_water` + `onboarding_completed_at` to `profiles`. **Required for M7** — without it the onboarding flow never finishes and the router traps users on `/onboarding`.
+14. `supabase/migrations/0014_creator_auto_member.sql` — AFTER INSERT trigger on `tournaments` that auto-enrolls the creator as an `accepted` row in `tournament_members`, plus a one-time backfill for existing tournaments. **Fix for M3** — without it, tournament creators hit RLS when submitting their own catch as an entry (`new row violates row-level security policy for table "tournament_entries"`).
 
 **Realtime:** After running 0006, enable Realtime for `tournament_entries` and `tournament_chat_messages` in **Database → Replication** so the live leaderboard + chat update without a refresh.
 
