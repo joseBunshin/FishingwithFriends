@@ -48,5 +48,8 @@ coverage/
 # Firebase CLI cache
 .firebase/
 
+# Stray manual screenshots / browser captures dropped at repo root
+.live*.png
+
 # Misc
 *.log
