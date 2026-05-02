@@ -45,5 +45,8 @@ android/app/upload-keystore.jks
 # Coverage
 coverage/
 
+# Firebase CLI cache
+.firebase/
+
 # Misc
 *.log
