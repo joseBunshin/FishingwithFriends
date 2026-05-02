@@ -51,9 +51,13 @@ class ReactionStrip extends ConsumerWidget {
             highlighted: entry.key == item.myReaction,
             onTap: () => onTapKind(entry.key),
           ),
+        // Empty state: a "React" CTA with a smiley-plus icon. Once
+        // reactions exist the picker collapses to an icon-only chip
+        // (`Icons.add_reaction_outlined`) so we don't double-mark with
+        // both an icon AND a "+" glyph.
         _Chip(
-          label: shown.isEmpty ? 'React' : '+',
-          icon: shown.isEmpty ? null : Icons.add,
+          label: shown.isEmpty ? 'React' : null,
+          icon: Icons.add_reaction_outlined,
           onTap: onTapPicker,
         ),
       ],
@@ -63,13 +67,13 @@ class ReactionStrip extends ConsumerWidget {
 
 class _Chip extends StatelessWidget {
   const _Chip({
-    required this.label,
     required this.onTap,
+    this.label,
     this.icon,
     this.highlighted = false,
   });
 
-  final String label;
+  final String? label;
   final IconData? icon;
   final bool highlighted;
   final VoidCallback onTap;
@@ -77,12 +81,13 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final hasLabel = label != null && label!.isNotEmpty;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
+        padding: EdgeInsets.symmetric(
+          horizontal: hasLabel ? AppSpacing.sm : AppSpacing.xs,
           vertical: AppSpacing.xxs,
         ),
         decoration: BoxDecoration(
@@ -98,19 +103,26 @@ class _Chip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 14, color: scheme.onSurface),
-              const SizedBox(width: AppSpacing.xxs),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+              Icon(
+                icon,
+                size: 16,
                 color: highlighted
                     ? scheme.primary
-                    : scheme.onSurface.withValues(alpha: 0.85),
+                    : scheme.onSurface.withValues(alpha: 0.7),
               ),
-            ),
+              if (hasLabel) const SizedBox(width: AppSpacing.xxs),
+            ],
+            if (hasLabel)
+              Text(
+                label!,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: highlighted
+                      ? scheme.primary
+                      : scheme.onSurface.withValues(alpha: 0.85),
+                ),
+              ),
           ],
         ),
       ),
