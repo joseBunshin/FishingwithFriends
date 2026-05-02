@@ -1,14 +1,13 @@
-import 'dart:math' as math;
-
 import 'package:fishing_with_friends/core/router/app_router.dart';
-import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Animated cold-start splash. Choreographs four overlapping phases on a
-/// single controller — fish dive-in, wordmark, water ripple, studio
-/// attribution — then routes to /home. Background matches the native
-/// splash exactly (`AppColors.navyDeep`) so the handoff is invisible.
+/// Bunshin Development Studios cold-start splash.
+///
+/// This is the **studio** splash — same brand frame plays before every
+/// Bunshin product, not the Fishing with Friends app. Reusable: copy
+/// this single file into any future Bunshin Flutter app, point its
+/// initial route at `SplashScreen()`, and it works.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -16,19 +15,24 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
+// Bunshin studio palette — kept local so the studio splash has zero
+// coupling to the host app's color tokens. Any Bunshin app can drop
+// this file in and ship.
+const _bunshinBg = Color(0xFF0A1A2A);
+const _bunshinCyan = Color(0xFF4DD9D9);
+const _bunshinCyanDim = Color(0xFF2BA8A8);
+
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  static const _totalDuration = Duration(milliseconds: 2600);
-  static const _holdAfter = Duration(milliseconds: 350);
+  static const _totalDuration = Duration(milliseconds: 3800);
+  static const _holdAfter = Duration(milliseconds: 250);
 
   late final AnimationController _controller;
-  late final Animation<double> _fishScale;
-  late final Animation<double> _fishOpacity;
-  late final Animation<Offset> _fishOffset;
-  late final Animation<double> _ripple;
-  late final Animation<double> _wordmark;
-  late final Animation<double> _studio;
-  late final Animation<double> _exitFade;
+  late final Animation<double> _markIn;
+  late final Animation<double> _wordmarkIn;
+  late final Animation<double> _urlIn;
+  late final Animation<double> _pacmanProgress;
+  late final Animation<double> _exit;
 
   bool _routed = false;
 
@@ -37,42 +41,28 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _controller = AnimationController(vsync: this, duration: _totalDuration);
 
-    _fishScale = Tween<double>(begin: 0.55, end: 1).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0, 0.45, curve: Curves.easeOutBack),
-      ),
-    );
-    _fishOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0, 0.30, curve: Curves.easeOut),
-      ),
-    );
-    _fishOffset = Tween<Offset>(
-      begin: const Offset(0, -0.18),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0, 0.45, curve: Curves.easeOutCubic),
-      ),
-    );
-    _ripple = CurvedAnimation(
+    // Total duration is 3800ms. Pacman finishes at 0.58 (=2200ms),
+    // then we hold the brand frame for ~1s before the exit fade starts
+    // at 0.85 (=3230ms).
+    _markIn = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.30, 0.85, curve: Curves.easeOut),
+      curve: const Interval(0, 0.22, curve: Curves.easeOut),
     );
-    _wordmark = CurvedAnimation(
+    _wordmarkIn = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.35, 0.65, curve: Curves.easeOut),
+      curve: const Interval(0.15, 0.33, curve: Curves.easeOut),
     );
-    _studio = CurvedAnimation(
+    _pacmanProgress = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.55, 0.80, curve: Curves.easeOut),
+      curve: const Interval(0.30, 0.58, curve: Curves.easeInOut),
     );
-    _exitFade = CurvedAnimation(
+    _urlIn = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.92, 1, curve: Curves.easeIn),
+      curve: const Interval(0.45, 0.58, curve: Curves.easeOut),
+    );
+    _exit = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.94, 1, curve: Curves.easeIn),
     );
 
     _controller.addStatusListener((status) async {
@@ -80,18 +70,14 @@ class _SplashScreenState extends State<SplashScreen>
         _routed = true;
         await Future<void>.delayed(_holdAfter);
         if (!mounted) return;
-        // Router redirect logic decides the actual destination
-        // (sign-in / onboarding / home). We hand off to /home and let
-        // the router send the user where they belong.
         context.go(AppRoutes.home);
       }
     });
 
-    // Honor the OS reduced-motion preference: shorten + skip choreography.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final disable = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
       if (disable) {
-        _controller.duration = const Duration(milliseconds: 600);
+        _controller.duration = const Duration(milliseconds: 700);
       }
       _controller.forward();
     });
@@ -109,72 +95,89 @@ class _SplashScreenState extends State<SplashScreen>
       animation: _controller,
       builder: (context, _) {
         return Opacity(
-          opacity: 1 - _exitFade.value,
+          opacity: 1 - _exit.value,
           child: Scaffold(
-            backgroundColor: AppColors.navyDeep,
+            backgroundColor: _bunshinBg,
             body: SafeArea(
-              child: Stack(
-                children: [
-                  // Subtle vertical gradient — navyDeep at top to navy
-                  // near the fish, gives the brand mark depth without
-                  // looking gimmicky.
-                  const Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            AppColors.navyDeep,
-                            AppColors.navy,
-                            AppColors.navyDeep,
-                          ],
-                          stops: [0, 0.55, 1],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final w = constraints.maxWidth;
+                  final markSize = (w * 0.34).clamp(96.0, 180.0);
+
+                  return Stack(
+                    children: [
+                      // Subtle radial vignette behind the brand mark
+                      const Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              center: Alignment.center,
+                              radius: 0.9,
+                              colors: [
+                                Color(0xFF14304F),
+                                _bunshinBg,
+                              ],
+                              stops: [0, 1],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  Center(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final markSize = math.min(
-                          constraints.maxWidth * 0.42,
-                          200,
-                        ).toDouble();
-                        return Column(
+                      Center(
+                        child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Spacer(flex: 3),
-                            _Mark(
-                              size: markSize,
-                              scale: _fishScale.value,
-                              opacity: _fishOpacity.value,
-                              offset: _fishOffset.value,
-                              ripple: _ripple.value,
-                            ),
-                            const SizedBox(height: 32),
+                            // Brand mark — subtle scale + fade in
                             Opacity(
-                              opacity: _wordmark.value,
+                              opacity: _markIn.value,
+                              child: Transform.scale(
+                                scale: 0.92 + 0.08 * _markIn.value,
+                                child: SizedBox(
+                                  width: markSize,
+                                  height: markSize,
+                                  child: const _GhostMark(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 36),
+                            // Wordmark — fade up
+                            Opacity(
+                              opacity: _wordmarkIn.value,
                               child: Transform.translate(
-                                offset: Offset(0, 12 * (1 - _wordmark.value)),
+                                offset: Offset(
+                                  0,
+                                  10 * (1 - _wordmarkIn.value),
+                                ),
                                 child: const _Wordmark(),
                               ),
                             ),
-                            const Spacer(flex: 4),
-                            Opacity(
-                              opacity: _studio.value,
-                              child: Transform.translate(
-                                offset: Offset(0, 8 * (1 - _studio.value)),
-                                child: const _StudioAttribution(),
-                              ),
-                            ),
-                            const SizedBox(height: 48),
                           ],
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                        ),
+                      ),
+                      // Pacman gag — tiny pacman chases a single dot
+                      // across the lower portion. On-brand wink without
+                      // overpowering the wordmark.
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 96,
+                        child: SizedBox(
+                          height: 16,
+                          child: _PacmanRow(progress: _pacmanProgress.value),
+                        ),
+                      ),
+                      // bunshin.io
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 36,
+                        child: Opacity(
+                          opacity: _urlIn.value,
+                          child: const _UrlTag(),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -184,157 +187,100 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-class _Mark extends StatelessWidget {
-  const _Mark({
-    required this.size,
-    required this.scale,
-    required this.opacity,
-    required this.offset,
-    required this.ripple,
-  });
+// ---------------------------------------------------------------------------
+// Ghost brand mark — vector so it stays crisp at any density.
 
-  final double size;
-  final double scale;
-  final double opacity;
-  final Offset offset;
-  final double ripple;
+class _GhostMark extends StatelessWidget {
+  const _GhostMark();
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size * 1.8,
-      height: size * 1.8,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Expanding water-ripple rings
-          for (var i = 0; i < 3; i++)
-            Opacity(
-              opacity: (1 - ripple) * 0.35 *
-                  (i == 0 ? 1 : (i == 1 ? 0.7 : 0.45)),
-              child: Container(
-                width: size * (1.0 + ripple * (1.4 + i * 0.4)),
-                height: size * (1.0 + ripple * (1.4 + i * 0.4)),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.orange.withValues(alpha: 0.6),
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
-          // The fish itself
-          Transform.translate(
-            offset: Offset(offset.dx * size, offset.dy * size),
-            child: Transform.scale(
-              scale: scale,
-              child: Opacity(
-                opacity: opacity,
-                child: SizedBox(
-                  width: size,
-                  height: size,
-                  child: const _FishMark(),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return CustomPaint(painter: _GhostPainter());
   }
 }
 
-/// Vector fish silhouette — drawn directly so it stays crisp at any
-/// density. Mirrors the placeholder PNG's body+tail composition but
-/// with cleaner curves.
-class _FishMark extends StatelessWidget {
-  const _FishMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(painter: _FishPainter());
-  }
-}
-
-class _FishPainter extends CustomPainter {
+class _GhostPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final cx = w / 2;
-    final cy = h / 2;
 
     final body = Paint()
-      ..color = AppColors.orange
+      ..color = _bunshinCyan
       ..style = PaintingStyle.fill;
-    final highlight = Paint()
-      ..color = AppColors.orangeDeep
+    final glow = Paint()
+      ..color = _bunshinCyan.withValues(alpha: 0.18)
+      ..style = PaintingStyle.fill
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
+    final eyeWhite = Paint()
+      ..color = Colors.white
       ..style = PaintingStyle.fill;
-    final eye = Paint()
-      ..color = AppColors.navyDeep
-      ..style = PaintingStyle.fill;
-    final eyeShine = Paint()
-      ..color = Colors.white.withValues(alpha: 0.85)
+    final pupil = Paint()
+      ..color = _bunshinBg
       ..style = PaintingStyle.fill;
 
-    // Body — horizontal teardrop pointing right
-    final bodyPath = Path()
-      ..moveTo(cx - w * 0.18, cy)
-      ..cubicTo(
-        cx - w * 0.18, cy - h * 0.30,
-        cx + w * 0.20, cy - h * 0.30,
-        cx + w * 0.36, cy,
-      )
-      ..cubicTo(
-        cx + w * 0.20, cy + h * 0.30,
-        cx - w * 0.18, cy + h * 0.30,
-        cx - w * 0.18, cy,
-      )
-      ..close();
-    canvas.drawPath(bodyPath, body);
+    // Geometry — classic Pacman-style ghost.
+    // Top: rounded dome. Sides: vertical. Bottom: 4 wave humps.
+    final left = w * 0.10;
+    final right = w * 0.90;
+    final domeHeight = h * 0.55;
+    final bodyTop = h * 0.10;
+    final bodyBottom = h * 0.86;
+    final centerY = bodyTop + domeHeight / 2;
+    final radius = (right - left) / 2;
+    final cx = (left + right) / 2;
 
-    // Tail — triangle pointing left
-    final tailPath = Path()
-      ..moveTo(cx - w * 0.14, cy)
-      ..lineTo(cx - w * 0.40, cy - h * 0.22)
-      ..lineTo(cx - w * 0.34, cy)
-      ..lineTo(cx - w * 0.40, cy + h * 0.22)
-      ..close();
-    canvas.drawPath(tailPath, body);
+    // Soft glow behind the body
+    canvas.drawCircle(Offset(cx, centerY), radius * 1.05, glow);
 
-    // Belly highlight — subtle deeper-orange wedge underneath
-    final bellyPath = Path()
-      ..moveTo(cx - w * 0.10, cy + h * 0.06)
-      ..cubicTo(
-        cx + w * 0.05, cy + h * 0.24,
-        cx + w * 0.22, cy + h * 0.18,
-        cx + w * 0.30, cy + h * 0.04,
+    final path = Path()
+      // Start at lower-left corner of the body
+      ..moveTo(left, bodyBottom)
+      ..lineTo(left, centerY)
+      // Dome — semicircle from lower-left up and over to lower-right
+      ..arcToPoint(
+        Offset(right, centerY),
+        radius: Radius.circular(radius),
       )
-      ..cubicTo(
-        cx + w * 0.18, cy + h * 0.12,
-        cx + w * 0.04, cy + h * 0.14,
-        cx - w * 0.10, cy + h * 0.06,
-      )
-      ..close();
-    canvas.drawPath(bellyPath, highlight);
+      ..lineTo(right, bodyBottom);
 
-    // Top fin
-    final finPath = Path()
-      ..moveTo(cx - w * 0.04, cy - h * 0.22)
-      ..quadraticBezierTo(
-        cx + w * 0.04, cy - h * 0.34,
-        cx + w * 0.12, cy - h * 0.22,
-      )
-      ..close();
+    // Wavy bottom — 4 humps total, alternating up-down so the silhouette
+    // reads like the classic ghost feet.
+    const humps = 4;
+    final humpWidth = (right - left) / humps;
+    for (var i = 0; i < humps; i++) {
+      final startX = right - i * humpWidth;
+      final endX = right - (i + 1) * humpWidth;
+      final midX = (startX + endX) / 2;
+      // Even humps point up (creating the gap between feet);
+      // odd ones go up to a peak. This produces the W-W-W shape.
+      final peakY = bodyBottom - h * 0.10;
+      path
+        ..lineTo(midX, peakY)
+        ..lineTo(endX, bodyBottom);
+    }
+    path.close();
+    canvas.drawPath(path, body);
+
+    // Eyes — two whites with off-center pupils looking right (toward
+    // the wordmark).
+    final eyeR = w * 0.10;
+    final pupilR = eyeR * 0.55;
+    final eyeY = centerY - h * 0.05;
+    final leftEye = Offset(cx - w * 0.16, eyeY);
+    final rightEye = Offset(cx + w * 0.10, eyeY);
     canvas
-      ..drawPath(finPath, highlight)
-      // Eye + shine
-      ..drawCircle(Offset(cx + w * 0.18, cy - h * 0.06), w * 0.035, eye)
+      ..drawCircle(leftEye, eyeR, eyeWhite)
+      ..drawCircle(rightEye, eyeR, eyeWhite)
       ..drawCircle(
-        Offset(cx + w * 0.19, cy - h * 0.07),
-        w * 0.012,
-        eyeShine,
+        Offset(leftEye.dx + eyeR * 0.35, leftEye.dy + eyeR * 0.10),
+        pupilR,
+        pupil,
+      )
+      ..drawCircle(
+        Offset(rightEye.dx + eyeR * 0.35, rightEye.dy + eyeR * 0.10),
+        pupilR,
+        pupil,
       );
   }
 
@@ -342,29 +288,43 @@ class _FishPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+// ---------------------------------------------------------------------------
+// Wordmark + url
+
 class _Wordmark extends StatelessWidget {
   const _Wordmark();
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          'Fishing with Friends',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-              ),
+        const Text(
+          'BUNSHIN',
+          style: TextStyle(
+            color: _bunshinCyan,
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 8,
+            height: 1,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 10),
         Container(
-          width: 36,
-          height: 3,
-          decoration: BoxDecoration(
-            color: AppColors.orange,
-            borderRadius: BorderRadius.circular(2),
+          width: 56,
+          height: 1.5,
+          color: _bunshinCyanDim,
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          'DEVELOPMENT STUDIOS',
+          style: TextStyle(
+            color: _bunshinCyanDim,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 4,
+            height: 1,
           ),
         ),
       ],
@@ -372,24 +332,88 @@ class _Wordmark extends StatelessWidget {
   }
 }
 
-class _StudioAttribution extends StatelessWidget {
-  const _StudioAttribution();
+class _UrlTag extends StatelessWidget {
+  const _UrlTag();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          'a Bunshin Development Studios product',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white.withValues(alpha: 0.55),
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w500,
-              ),
+    return Center(
+      child: Text(
+        'bunshin.io',
+        style: TextStyle(
+          color: _bunshinCyan.withValues(alpha: 0.85),
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 4,
         ),
-      ],
+      ),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Pacman-chasing-the-ghost gag — a quiet wink at the studio mark. A
+// single dot sits center-bottom; pacman slides in from the left, eats
+// the dot as it passes, exits right.
+
+class _PacmanRow extends StatelessWidget {
+  const _PacmanRow({required this.progress});
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _PacmanPainter(progress: progress));
+  }
+}
+
+class _PacmanPainter extends CustomPainter {
+  _PacmanPainter({required this.progress});
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cy = h / 2;
+    final r = h * 0.50;
+
+    final yellow = Paint()
+      ..color = const Color(0xFFFFD93D)
+      ..style = PaintingStyle.fill;
+    final dot = Paint()
+      ..color = _bunshinCyan.withValues(alpha: 0.85)
+      ..style = PaintingStyle.fill;
+
+    // Pacman travels left → right across the strip
+    final pacX = -r * 2 + (w + r * 4) * progress;
+    final dotX = w * 0.55;
+
+    // Draw the dot only while pacman hasn't reached it
+    if (pacX < dotX - r * 0.6) {
+      canvas.drawCircle(Offset(dotX, cy), 2.5, dot);
+    }
+
+    // Pacman with chomping mouth — opens 0..40deg over a 180ms cycle
+    final chompPhase = (progress * 8) % 1; // 4 chomps over the run
+    final mouthOpen = (chompPhase < 0.5
+            ? chompPhase * 2
+            : (1 - chompPhase) * 2) *
+        0.7;
+    final mouthAngle = mouthOpen * 0.7; // radians
+
+    final path = Path()
+      ..moveTo(pacX, cy)
+      ..arcTo(
+        Rect.fromCircle(center: Offset(pacX, cy), radius: r),
+        mouthAngle,
+        2 * 3.14159 - 2 * mouthAngle,
+        false,
+      )
+      ..close();
+    canvas.drawPath(path, yellow);
+  }
+
+  @override
+  bool shouldRepaint(covariant _PacmanPainter old) =>
+      old.progress != progress;
 }
