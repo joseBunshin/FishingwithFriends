@@ -7,6 +7,7 @@ import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/catch_photo_carousel.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/conditions_block.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/delete_catch_sheet.dart';
+import 'package:fishing_with_friends/features/catches/presentation/widgets/location_map_card.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_list.dart';
 import 'package:fishing_with_friends/features/friends/data/friends_repository_provider.dart';
 import 'package:fishing_with_friends/features/profile/presentation/widgets/avatar_view.dart';
@@ -109,14 +110,16 @@ class _Body extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _AnglerLine(anglerId: catch_.anglerId, isMine: isMine),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.lg),
                 _Headline(catch_: catch_),
                 const SizedBox(height: AppSpacing.sm),
                 CatchComparisonLine(catchId: catch_.id),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.lg),
                 _MeasurementRow(catch_: catch_),
                 const SizedBox(height: AppSpacing.lg),
-                _MetadataCard(catch_: catch_),
+                _LocationBlock(catch_: catch_),
+                const SizedBox(height: AppSpacing.md),
+                _CaughtAtRow(caughtAt: catch_.caughtAt),
                 if (catch_.conditions.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.md),
                   ConditionsBlock(conditions: catch_.conditions),
@@ -253,21 +256,13 @@ class _Headline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          catch_.speciesLabel ?? 'Unknown species',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-        ),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(
-          DateFormat.yMMMd().add_jm().format(catch_.caughtAt.toLocal()),
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ],
+    return Text(
+      catch_.speciesLabel ?? 'Unknown species',
+      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.8,
+            height: 1.05,
+          ),
     );
   }
 }
@@ -283,7 +278,11 @@ class _MeasurementRow extends ConsumerWidget {
     final pills = <Widget>[];
     final weight = formatWeight(catch_.weightKg, units);
     if (weight != null) {
-      pills.add(_MeasurementPill(icon: Icons.scale_outlined, text: weight));
+      pills.add(_MeasurementPill(
+        icon: Icons.scale_outlined,
+        text: weight,
+        emphasized: true,
+      ));
     }
     final length = formatLength(catch_.lengthCm, units);
     if (length != null) {
@@ -304,118 +303,128 @@ class _MeasurementRow extends ConsumerWidget {
 }
 
 class _MeasurementPill extends StatelessWidget {
-  const _MeasurementPill({required this.icon, required this.text});
+  const _MeasurementPill({
+    required this.icon,
+    required this.text,
+    this.emphasized = false,
+  });
 
   final IconData icon;
   final String text;
+  final bool emphasized;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final bg = emphasized ? AppColors.orange : scheme.surfaceContainerHighest;
+    final fg = emphasized ? AppColors.white : scheme.onSurface;
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        color: bg,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        border: emphasized
+            ? null
+            : Border.all(color: scheme.outlineVariant, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: scheme.primary),
+          Icon(icon, size: 16, color: fg),
           const SizedBox(width: AppSpacing.xs),
-          Text(text,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  )),
+          Text(
+            text,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: fg,
+                  letterSpacing: 0.2,
+                ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _MetadataCard extends StatelessWidget {
-  const _MetadataCard({required this.catch_});
+class _LocationBlock extends StatelessWidget {
+  const _LocationBlock({required this.catch_});
 
   final Catch catch_;
 
-  String _locationText() {
-    if (catch_.secretSpot && !catch_.hasLocation) return 'Location hidden';
-    if (catch_.secretSpot) return 'Location hidden';
-    if (!catch_.hasLocation) return 'Not captured';
-    return '${catch_.latitude!.toStringAsFixed(4)}, '
-        '${catch_.longitude!.toStringAsFixed(4)}';
-  }
-
-  IconData _locationIcon() {
-    if (catch_.secretSpot) return Icons.lock_outline;
-    if (!catch_.hasLocation) return Icons.location_off_outlined;
-    return Icons.location_on_outlined;
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            _IconLine(
-              icon: _locationIcon(),
-              label: 'Location',
-              value: _locationText(),
+    if (catch_.hasLocation && !catch_.secretSpot) {
+      return LocationMapCard(
+        latitude: catch_.latitude!,
+        longitude: catch_.longitude!,
+        title: catch_.speciesLabel ?? 'Catch location',
+      );
+    }
+    final scheme = Theme.of(context).colorScheme;
+    final secret = catch_.secretSpot;
+    final icon = secret ? Icons.lock_outline : Icons.location_off_outlined;
+    final label = secret ? 'Secret spot' : 'No location captured';
+    final caption = secret
+        ? 'GPS hidden — only the angler knows.'
+        : 'This catch was logged without GPS.';
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.lg,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: scheme.primary, size: 22),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  caption,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
             ),
-            const Divider(height: AppSpacing.lg),
-            _IconLine(
-              icon: Icons.access_time,
-              label: 'Caught',
-              value: DateFormat.yMMMd()
-                  .add_jm()
-                  .format(catch_.caughtAt.toLocal()),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _IconLine extends StatelessWidget {
-  const _IconLine({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+class _CaughtAtRow extends StatelessWidget {
+  const _CaughtAtRow({required this.caughtAt});
 
-  final IconData icon;
-  final String label;
-  final String value;
+  final DateTime caughtAt;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, color: scheme.primary, size: 20),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall,
+        Icon(Icons.access_time, size: 18, color: scheme.onSurfaceVariant),
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          DateFormat.yMMMd().add_jm().format(caughtAt.toLocal()),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
               ),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ],
-          ),
         ),
       ],
     );

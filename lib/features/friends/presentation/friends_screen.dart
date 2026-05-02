@@ -1,6 +1,8 @@
 import 'package:fishing_with_friends/core/error/app_exception.dart';
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
+import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/core/widgets/section_label.dart';
 import 'package:fishing_with_friends/features/friends/application/friend_search_controller.dart';
 import 'package:fishing_with_friends/features/friends/application/friends_controller.dart';
 import 'package:fishing_with_friends/features/friends/data/friends_repository.dart';
@@ -55,37 +57,58 @@ class _Body extends ConsumerWidget {
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.zero,
       children: [
-        _UsernameCard(username: '@$username'),
         const SizedBox(height: AppSpacing.lg),
-        Text('Find Anglers',
-            style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: AppSpacing.sm),
-        const _SearchInput(),
-        const SizedBox(height: AppSpacing.sm),
-        _SearchResults(bundle: bundle),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: _UsernameCard(username: '@$username'),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: SectionLabel('Find anglers'),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: _SearchInput(),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: _SearchResults(bundle: bundle),
+        ),
         if (bundle.pendingIncoming.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            'Friend Requests (${bundle.pendingIncoming.length})',
-            style: Theme.of(context).textTheme.titleMedium,
+          const SizedBox(height: AppSpacing.xl),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: SectionLabel(
+              'Friend requests',
+              trailing: '${bundle.pendingIncoming.length}',
+            ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
           for (final f in bundle.pendingIncoming)
             _PendingRow(
               friendship: f,
               profile: bundle.profilesById[f.requesterId],
             ),
         ],
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          'My Friends (${bundle.accepted.length})',
-          style: Theme.of(context).textTheme.titleMedium,
+        const SizedBox(height: AppSpacing.xl),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: SectionLabel(
+            'My friends',
+            trailing:
+                bundle.accepted.isEmpty ? null : '${bundle.accepted.length}',
+          ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.md),
         if (bundle.accepted.isEmpty)
-          const _EmptyFriendsCard()
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: _EmptyFriendsCard(),
+          )
         else
           for (final f in bundle.accepted)
             _FriendRow(
@@ -93,6 +116,7 @@ class _Body extends ConsumerWidget {
               currentUserId: user?.id ?? '',
               profile: bundle.profilesById[f.otherSide(user?.id ?? '')],
             ),
+        const SizedBox(height: AppSpacing.xxl),
       ],
     );
   }
@@ -105,33 +129,48 @@ class _UsernameCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Your Username',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(username,
-                      style: Theme.of(context).textTheme.titleMedium),
-                ],
-              ),
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.navy,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'YOUR HANDLE'.toUpperCase(),
+                  style: TextStyle(
+                    color: AppColors.mist.withValues(alpha: 0.8),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.4,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  username,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: AppSpacing.sm),
-            IconButton.outlined(
-              tooltip: 'Copy username',
-              icon: const Icon(Icons.content_copy, size: 16),
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: username));
-              },
-            ),
-          ],
-        ),
+          ),
+          IconButton(
+            tooltip: 'Copy handle',
+            icon: const Icon(Icons.content_copy, color: AppColors.orange),
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: username));
+            },
+          ),
+        ],
       ),
     );
   }
@@ -178,11 +217,14 @@ class _SearchResults extends ConsumerWidget {
     return asyncResults.when(
       data: (results) {
         if (results.isEmpty) return const SizedBox.shrink();
-        return Column(
-          children: [
-            for (final p in results)
-              _SearchResultRow(profile: p, bundle: bundle),
-          ],
+        return Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.md),
+          child: Column(
+            children: [
+              for (final p in results)
+                _SearchResultRow(profile: p, bundle: bundle),
+            ],
+          ),
         );
       },
       loading: () => const Padding(
@@ -196,6 +238,88 @@ class _SearchResults extends ConsumerWidget {
         ),
       ),
       error: (e, _) => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// Sharper row treatment used by all three list types (search result,
+/// pending invite, accepted friend). Avatar 24px, display name big +
+/// bold, handle muted small, no Card wrapper — just a hairline divider
+/// between adjacent rows. Trailing widget supplied by caller.
+class _AnglerRow extends StatelessWidget {
+  const _AnglerRow({
+    required this.userId,
+    required this.profile,
+    required this.fallbackHandle,
+    required this.trailing,
+  });
+
+  final String userId;
+  final Profile? profile;
+  final String fallbackHandle;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final hasDisplayName = profile?.displayName?.isNotEmpty ?? false;
+    final primary = hasDisplayName
+        ? profile!.displayName!
+        : profile?.handle ?? fallbackHandle;
+    final secondary = hasDisplayName ? profile!.handle : null;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push('/profile/$userId'),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: scheme.outlineVariant),
+            ),
+          ),
+          child: Row(
+            children: [
+              AvatarView(avatarPath: profile?.avatarPath, radius: 24),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      primary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    if (secondary != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        secondary,
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              trailing,
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -225,46 +349,21 @@ class _SearchResultRow extends ConsumerWidget {
     } else {
       action = FilledButton(
         onPressed: busy ? null : () => controller.sendRequest(profile.id),
-        child: const Text('Send'),
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(0, 36),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          backgroundColor: AppColors.orange,
+          foregroundColor: AppColors.white,
+        ),
+        child: const Text('Add'),
       );
     }
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/profile/${profile.id}'),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              AvatarView(avatarPath: profile.avatarPath, radius: 18),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      profile.displayName?.isNotEmpty ?? false
-                          ? profile.displayName!
-                          : profile.handle,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    if (profile.displayName?.isNotEmpty ?? false)
-                      Text(
-                        profile.handle,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                  ],
-                ),
-              ),
-              action,
-            ],
-          ),
-        ),
-      ),
+    return _AnglerRow(
+      userId: profile.id,
+      profile: profile,
+      fallbackHandle: profile.handle,
+      trailing: action,
     );
   }
 }
@@ -279,39 +378,28 @@ class _PendingRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(friendsControllerProvider.notifier);
     final busy = ref.watch(friendsControllerProvider).isLoading;
-    final requesterId = friendship.requesterId;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/profile/$requesterId'),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.sm,
+    return _AnglerRow(
+      userId: friendship.requesterId,
+      profile: profile,
+      fallbackHandle: '@unknown',
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Reject',
+            onPressed: busy ? null : () => controller.reject(friendship),
+            icon: const Icon(Icons.close, size: 20),
           ),
-          child: Row(
-            children: [
-              AvatarView(avatarPath: profile?.avatarPath, radius: 18),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text(
-                  profile?.handle ?? '@unknown',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
-              TextButton(
-                onPressed: busy ? null : () => controller.reject(friendship),
-                child: const Text('Reject'),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              FilledButton(
-                onPressed: busy ? null : () => controller.accept(friendship),
-                child: const Text('Accept'),
-              ),
-            ],
+          FilledButton(
+            onPressed: busy ? null : () => controller.accept(friendship),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 36),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            ),
+            child: const Text('Accept'),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -332,49 +420,15 @@ class _FriendRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final busy = ref.watch(friendsControllerProvider).isLoading;
     final otherId = friendship.otherSide(currentUserId);
-    final hasDisplayName = profile?.displayName?.isNotEmpty ?? false;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/profile/$otherId'),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              AvatarView(avatarPath: profile?.avatarPath, radius: 18),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      hasDisplayName
-                          ? profile!.displayName!
-                          : profile?.handle ?? '@unknown',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    if (hasDisplayName)
-                      Text(
-                        profile!.handle,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: busy
-                    ? null
-                    : () => _confirmRemove(context, ref, otherId),
-                icon: const Icon(Icons.close),
-                tooltip: 'Remove friend',
-              ),
-            ],
-          ),
-        ),
+    return _AnglerRow(
+      userId: otherId,
+      profile: profile,
+      fallbackHandle: '@unknown',
+      trailing: IconButton(
+        onPressed: busy ? null : () => _confirmRemove(context, ref, otherId),
+        icon: const Icon(Icons.more_horiz, size: 20),
+        tooltip: 'Manage',
       ),
     );
   }
@@ -419,24 +473,22 @@ class _PillLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color:
-            muted ? scheme.onSurface.withValues(alpha: 0.06) : scheme.primary,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        color: muted ? AppColors.mist : AppColors.orange,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
       ),
       child: Text(
-        label,
+        label.toUpperCase(),
         style: TextStyle(
-          color:
-              muted ? scheme.onSurface.withValues(alpha: 0.7) : scheme.onPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 12,
+          color: muted ? AppColors.slate : AppColors.white,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.6,
+          fontSize: 11,
         ),
       ),
     );
@@ -448,14 +500,16 @@ class _EmptyFriendsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Center(
-          child: Text(
-            'No friends yet — search by username above.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      ),
+      child: Center(
+        child: Text(
+          'No friends yet — search by username above.',
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
       ),
     );
