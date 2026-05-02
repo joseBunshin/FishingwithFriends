@@ -3,6 +3,7 @@ import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/catch_photo_carousel.dart';
+import 'package:fishing_with_friends/features/catches/presentation/widgets/conditions_block.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_list.dart';
 import 'package:fishing_with_friends/features/storytelling/application/share_card_export.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/catch_comparison_line.dart';
@@ -82,6 +83,10 @@ class _Body extends StatelessWidget {
                 _MeasurementRow(catch_: catch_),
                 const SizedBox(height: AppSpacing.lg),
                 _MetadataCard(catch_: catch_),
+                if (catch_.conditions.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  ConditionsBlock(conditions: catch_.conditions),
+                ],
                 if (catch_.rig != null && catch_.rig!.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.md),
                   _LabeledLine(label: 'Rig', value: catch_.rig!),
