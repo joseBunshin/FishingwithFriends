@@ -9,8 +9,7 @@
 // correct degraded state. The catch save is never blocked.
 
 // deno-lint-ignore-file no-explicit-any
-import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
 interface TriggerPayload {
   catch_id: string;
