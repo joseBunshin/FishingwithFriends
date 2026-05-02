@@ -57,6 +57,7 @@ The service-role key (already inserted for the conditions function) is reused.
 19. `supabase/migrations/0019_avatars_bucket.sql` — public `avatars` storage bucket with owner-only write policies (gated by user-id-prefixed path). **Required for M7 avatar upload** — without it the picker fails with a storage RLS denial.
 20. `supabase/migrations/0020_storytelling_friend_visibility.sql` — broadens RLS on `personal_records` and `user_badges` so accepted friends can read each other's PRs and badges (was owner-only). **Required for the social ProfileScreen** — without it friend profiles render zero badges.
 21. `supabase/migrations/0021_tournament_metric_extra_values.sql` — extends the `tournament_metric` enum with `biggest_fish`, `most_catches`, `longest_catch`, `biggest_single`. **Required to create tournaments under those scoring modes** — without it the create sheet 500s with `22P02 invalid_text_representation` when anything other than `weight`/`length` is chosen.
+22. `supabase/migrations/0022_creator_invite_members.sql` — adds RLS policy `tournament_members_insert_creator` so creators can directly invite anglers (insert pending member rows). The original schema only allowed self-pending inserts. **Required for the "Invite friends" sheet on the Members tab** — without it every invite RLS-fails silently.
 
 **Realtime:** After running 0006, enable Realtime for `tournament_entries` and `tournament_chat_messages` in **Database → Replication** so the live leaderboard + chat update without a refresh.
 

@@ -7,6 +7,7 @@ import 'package:fishing_with_friends/features/tournaments/application/tournament
 import 'package:fishing_with_friends/features/tournaments/data/tournaments_repository_provider.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament_member.dart';
+import 'package:fishing_with_friends/features/tournaments/presentation/invite_friends_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,11 +35,15 @@ class MembersTab extends ConsumerWidget {
         final accepted = members
             .where((m) => m.status == TournamentMemberStatus.accepted)
             .toList();
+        final allMemberIds = {for (final m in members) m.anglerId};
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
             if (isCreator) ...[
-              _JoinCodeCard(joinCode: tournament.joinCode),
+              _InviteHeader(
+                tournament: tournament,
+                alreadyInvitedIds: allMemberIds,
+              ),
               const SizedBox(height: AppSpacing.xl),
             ],
             if (pending.isNotEmpty) ...[
@@ -79,6 +84,59 @@ class MembersTab extends ConsumerWidget {
   }
 }
 
+/// Two ways to add anglers to a tournament — direct friend invite + the
+/// shareable join code. Stacked under the "Members" tab for the creator
+/// so the path from "tournament exists" to "people are in it" is one tap.
+class _InviteHeader extends ConsumerWidget {
+  const _InviteHeader({
+    required this.tournament,
+    required this.alreadyInvitedIds,
+  });
+
+  final Tournament tournament;
+  final Set<String> alreadyInvitedIds;
+
+  Future<void> _openInvite(BuildContext context, WidgetRef ref) async {
+    final invitedCount = await InviteFriendsSheet.show(
+      context,
+      tournamentId: tournament.id,
+      alreadyInvitedIds: alreadyInvitedIds,
+    );
+    if (invitedCount != null && invitedCount > 0) {
+      ref.invalidate(tournamentMembersProvider(tournament.id));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            invitedCount == 1
+                ? 'Invited 1 angler.'
+                : 'Invited $invitedCount anglers.',
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FilledButton.icon(
+          onPressed: () => _openInvite(context, ref),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(56),
+          ),
+          icon: const Icon(Icons.person_add_alt_1),
+          label: const Text('Invite friends'),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _JoinCodeCard(joinCode: tournament.joinCode),
+      ],
+    );
+  }
+}
+
 /// Navy hero with the 8-char join code in tracked white type. Tap a
 /// dedicated copy button on the right to put it on the clipboard.
 class _JoinCodeCard extends StatelessWidget {
@@ -101,7 +159,7 @@ class _JoinCodeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'JOIN CODE',
+                  'OR SHARE THIS CODE',
                   style: TextStyle(
                     color: AppColors.mist.withValues(alpha: 0.8),
                     fontSize: 11,
@@ -117,6 +175,15 @@ class _JoinCodeCard extends StatelessWidget {
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 6,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'For non-friends — they enter it from the Tournaments tab.',
+                  style: TextStyle(
+                    color: AppColors.mist.withValues(alpha: 0.7),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],

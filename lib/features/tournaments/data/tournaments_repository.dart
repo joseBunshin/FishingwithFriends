@@ -90,6 +90,47 @@ class TournamentsRepository {
     }
   }
 
+  /// Creator-side invite: drop pending member rows for [anglerIds] under
+  /// [tournamentId]. RLS (migration 0022) restricts this to the creator.
+  /// Pre-existing rows skip via on-conflict-do-nothing semantics on the
+  /// upsert. Anglers get a `tournament_invite` notification via the
+  /// 0006 trigger.
+  ///
+  /// Status is `pending` so the invitee can opt in (matches the
+  /// existing "review your invite" notification UX). The creator can
+  /// later flip them to accepted via the existing approval path, or
+  /// the angler self-accepts when we wire up the invite-acceptance UI.
+  Future<int> inviteMembers({
+    required String tournamentId,
+    required List<String> anglerIds,
+  }) async {
+    if (anglerIds.isEmpty) return 0;
+    try {
+      final rows = anglerIds
+          .map(
+            (id) => {
+              'tournament_id': tournamentId,
+              'angler_id': id,
+              'status': 'pending',
+            },
+          )
+          .toList();
+      final inserted = await dataSource.insertMembers(rows);
+      return inserted.length;
+    } on PostgrestException catch (e) {
+      // Unique-violation on (tournament_id, angler_id) means the angler
+      // is already a member — partial-batch inserts split by the caller
+      // make this rare; surface as a friendly message.
+      if (e.code == '23505') {
+        throw const ValidationFailure(
+          'One or more anglers are already in this tournament.',
+        );
+      }
+      throw NetworkFailure('Failed to invite anglers: ${e.message}',
+          cause: e);
+    }
+  }
+
   /// Look up a tournament by code and request membership. Returns the
   /// tournament on success. Validation surface intentionally identical
   /// for "no tournament with that code" and "RLS denied" so attackers
