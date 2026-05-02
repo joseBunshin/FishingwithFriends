@@ -1,8 +1,10 @@
+import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
-/// Card tile used for the Home stat grid (Total Catches, Total Weight, etc).
-/// Reusable on the PR screens in M5.
+/// Big-number stat tile used in the Home grid + (eventually) PR screens.
+/// Sharper than the original card-with-icon — matches the modernized
+/// profile/friends typography language.
 class StatTile extends StatelessWidget {
   const StatTile({
     required this.label,
@@ -20,50 +22,58 @@ class StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                  ),
-                ),
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: scheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
-                  child: Icon(icon, size: 18, color: scheme.primary),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: scheme.primary),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 11,
                     fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                    color: AppColors.slate,
                   ),
-            ),
-            if (caption != null) ...[
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                caption!,
-                style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: AppColors.navy,
+              letterSpacing: -0.6,
+              height: 1.05,
+            ),
+          ),
+          if (caption != null) ...[
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              caption!,
+              style: TextStyle(
+                fontSize: 12,
+                color: scheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

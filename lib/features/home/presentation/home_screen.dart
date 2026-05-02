@@ -2,6 +2,7 @@ import 'package:fishing_with_friends/core/router/app_router.dart';
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/core/units/measurement_format.dart';
+import 'package:fishing_with_friends/core/widgets/section_label.dart';
 import 'package:fishing_with_friends/features/feed/data/feed_repository_provider.dart';
 import 'package:fishing_with_friends/features/feed/domain/feed_item.dart';
 import 'package:fishing_with_friends/features/feed/presentation/feed_item_card.dart';
@@ -44,12 +45,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.lg),
             _StatGrid(metrics: metrics),
             const SizedBox(height: AppSpacing.xl),
-            Text(
-              'Activity',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
+            const SectionLabel('Activity'),
             const SizedBox(height: AppSpacing.md),
             ..._activitySection(asyncFeed, user?.id ?? ''),
           ],

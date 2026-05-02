@@ -1,7 +1,6 @@
 import 'package:fishing_with_friends/features/map/data/map_points_provider.dart';
 import 'package:fishing_with_friends/features/map/domain/map_point.dart';
 import 'package:fishing_with_friends/features/map/presentation/map_screen.dart';
-import 'package:fishing_with_friends/features/map/presentation/widgets/conditions_chip_strip.dart';
 import 'package:fishing_with_friends/features/map/presentation/widgets/heatmap_layer.dart';
 import 'package:fishing_with_friends/features/map/presentation/widgets/map_controls.dart';
 import 'package:flutter/material.dart';
@@ -48,39 +47,17 @@ Widget _harness({
 }
 
 void main() {
-  testWidgets('renders map controls + conditions strip + legend', (tester) async {
+  testWidgets('renders map controls + legend', (tester) async {
     await tester.pumpWidget(_harness(initial: const AsyncData([])));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ConditionsChipStrip), findsOneWidget);
     expect(find.byType(MapControls), findsOneWidget);
     expect(find.byType(FlutterMap), findsOneWidget);
     expect(find.text('Yours'), findsOneWidget);
     expect(find.text('Friends'), findsOneWidget);
   });
 
-  testWidgets('renders own + friend pins when heatmap is OFF', (tester) async {
-    await tester.pumpWidget(
-      _harness(
-        initial: AsyncData([_own('a'), _friend('b')]),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    // Toggle heatmap OFF (default is ON).
-    final heatmapSwitch = find.descendant(
-      of: find.byType(MapControls),
-      matching: find.text('Heatmap'),
-    );
-    await tester.tap(heatmapSwitch);
-    await tester.pumpAndSettle();
-
-    // Both own + friend are markers; HeatmapLayer renders nothing.
-    expect(find.byType(MarkerLayer), findsOneWidget);
-  });
-
-  testWidgets(
-      'heatmap mode ON: friend points become a heatmap layer, own stay as pins',
+  testWidgets('renders own + friend pins by default (heatmap OFF)',
       (tester) async {
     await tester.pumpWidget(
       _harness(
@@ -89,11 +66,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Default heatmap is ON.
-    expect(find.byType(HeatmapLayer), findsOneWidget);
+    // Default heatmap is OFF — friend points render as pins, no heatmap.
+    expect(find.byType(MarkerLayer), findsOneWidget);
+    expect(find.byType(HeatmapLayer), findsNothing);
   });
 
-  testWidgets('Show Friends OFF hides the heatmap layer', (tester) async {
+  testWidgets(
+      'turning Density ON makes friend points become a heatmap layer',
+      (tester) async {
     await tester.pumpWidget(
       _harness(
         initial: AsyncData([_own('a'), _friend('b')]),
@@ -101,11 +81,41 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final friendsSwitch = find.descendant(
+    // Default density is OFF; tap to turn ON.
+    final densityToggle = find.descendant(
+      of: find.byType(MapControls),
+      matching: find.text('Density'),
+    );
+    await tester.tap(densityToggle);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HeatmapLayer), findsOneWidget);
+  });
+
+  testWidgets('Show Friends OFF hides the heatmap layer in density mode',
+      (tester) async {
+    await tester.pumpWidget(
+      _harness(
+        initial: AsyncData([_own('a'), _friend('b')]),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Turn on density first so a heatmap could exist.
+    final densityToggle = find.descendant(
+      of: find.byType(MapControls),
+      matching: find.text('Density'),
+    );
+    await tester.tap(densityToggle);
+    await tester.pumpAndSettle();
+    expect(find.byType(HeatmapLayer), findsOneWidget);
+
+    // Then toggle Show Friends OFF.
+    final friendsToggle = find.descendant(
       of: find.byType(MapControls),
       matching: find.text('Show friends'),
     );
-    await tester.tap(friendsSwitch);
+    await tester.tap(friendsToggle);
     await tester.pumpAndSettle();
 
     expect(find.byType(HeatmapLayer), findsNothing);

@@ -72,7 +72,9 @@ class AppTheme {
         color: scheme.surfaceContainerHighest,
         shadowColor: AppColors.navy.withValues(alpha: 0.06),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          // Sharper than radiusLg — matches the modernized profile/friends
+          // visual language that we're rolling out app-wide.
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(

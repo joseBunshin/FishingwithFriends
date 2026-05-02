@@ -82,48 +82,53 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final hasLabel = label != null && label!.isNotEmpty;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: hasLabel ? AppSpacing.sm : AppSpacing.xs,
-          vertical: AppSpacing.xxs,
-        ),
-        decoration: BoxDecoration(
-          color: highlighted
-              ? scheme.primary.withValues(alpha: 0.12)
-              : scheme.onSurface.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: highlighted
-              ? Border.all(color: scheme.primary.withValues(alpha: 0.4))
-              : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(
-                icon,
-                size: 16,
-                color: highlighted
-                    ? scheme.primary
-                    : scheme.onSurface.withValues(alpha: 0.7),
-              ),
-              if (hasLabel) const SizedBox(width: AppSpacing.xxs),
-            ],
-            if (hasLabel)
-              Text(
-                label!,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 32, minWidth: 32),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: highlighted
+                ? scheme.primary.withValues(alpha: 0.12)
+                : scheme.onSurface.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: highlighted
+                ? Border.all(color: scheme.primary.withValues(alpha: 0.4))
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 18,
                   color: highlighted
                       ? scheme.primary
-                      : scheme.onSurface.withValues(alpha: 0.85),
+                      : scheme.onSurface.withValues(alpha: 0.7),
                 ),
-              ),
-          ],
+                if (hasLabel) const SizedBox(width: AppSpacing.xxs),
+              ],
+              if (hasLabel)
+                Text(
+                  label!,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: highlighted
+                        ? scheme.primary
+                        : scheme.onSurface.withValues(alpha: 0.85),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
