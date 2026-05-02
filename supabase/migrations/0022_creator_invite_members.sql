@@ -23,15 +23,21 @@
 
 begin;
 
+-- Drop a possibly-broken earlier version of this policy that used
+-- a direct EXISTS subquery on tournaments. That formulation triggered
+-- the same cross-table RLS recursion 0007 originally fixed, so the
+-- check failed at runtime with "new row violates row-level security
+-- policy for table tournament_members".
+drop policy if exists tournament_members_insert_creator
+  on public.tournament_members;
+
+-- Use the security-definer helper from 0007 to read tournaments.creator_id
+-- without re-entering RLS. This breaks the recursion cleanly.
 create policy tournament_members_insert_creator
   on public.tournament_members
   for insert to authenticated
   with check (
-    exists (
-      select 1 from public.tournaments t
-      where t.id = tournament_members.tournament_id
-        and t.creator_id = auth.uid()
-    )
+    public.tournament_creator_id(tournament_id) = auth.uid()
   );
 
 notify pgrst, 'reload schema';
