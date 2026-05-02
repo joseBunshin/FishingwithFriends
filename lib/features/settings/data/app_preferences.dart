@@ -2,31 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Single unified preference for every physical measurement in the app:
+/// weight, length, AND temperature. Imperial → lbs / in / °F. Metric →
+/// kg / cm / °C. This is intentional — splitting weight from temperature
+/// led to the surprise of users picking "metric" but still seeing °F.
 enum DisplayUnits { imperial, metric }
 
 extension DisplayUnitsX on DisplayUnits {
   String get label => switch (this) {
-        DisplayUnits.imperial => 'Imperial (lbs · in)',
-        DisplayUnits.metric => 'Metric (kg · cm)',
+        DisplayUnits.imperial => 'Imperial (lbs · in · °F)',
+        DisplayUnits.metric => 'Metric (kg · cm · °C)',
       };
-}
-
-enum TemperatureUnits { celsius, fahrenheit }
-
-extension TemperatureUnitsX on TemperatureUnits {
-  String get label => switch (this) {
-        TemperatureUnits.celsius => 'Celsius (°C)',
-        TemperatureUnits.fahrenheit => 'Fahrenheit (°F)',
-      };
-  String get short => switch (this) {
-        TemperatureUnits.celsius => '°C',
-        TemperatureUnits.fahrenheit => '°F',
+  String get tempShort => switch (this) {
+        DisplayUnits.imperial => '°F',
+        DisplayUnits.metric => '°C',
       };
 }
 
 const _kThemeKey = 'app.theme_mode';
 const _kUnitsKey = 'app.display_units';
-const _kTempKey = 'app.temperature_units';
 
 /// Loaded once on app boot. Holds the SharedPreferences singleton + the
 /// initial values to seed the providers.
@@ -97,19 +91,6 @@ class AppPreferences {
       units == DisplayUnits.metric ? 'metric' : 'imperial',
     );
   }
-
-  TemperatureUnits get temperatureUnits {
-    return _read(_kTempKey) == 'fahrenheit'
-        ? TemperatureUnits.fahrenheit
-        : TemperatureUnits.celsius;
-  }
-
-  Future<void> setTemperatureUnits(TemperatureUnits units) {
-    return _write(
-      _kTempKey,
-      units == TemperatureUnits.fahrenheit ? 'fahrenheit' : 'celsius',
-    );
-  }
 }
 
 /// Initialized in `main.dart` via `appPreferencesProvider.overrideWithValue`.
@@ -145,18 +126,3 @@ class DisplayUnitsController extends Notifier<DisplayUnits> {
 final displayUnitsProvider =
     NotifierProvider<DisplayUnitsController, DisplayUnits>(
         DisplayUnitsController.new);
-
-class TemperatureUnitsController extends Notifier<TemperatureUnits> {
-  @override
-  TemperatureUnits build() =>
-      ref.watch(appPreferencesProvider).temperatureUnits;
-
-  Future<void> set(TemperatureUnits units) async {
-    await ref.read(appPreferencesProvider).setTemperatureUnits(units);
-    state = units;
-  }
-}
-
-final temperatureUnitsProvider =
-    NotifierProvider<TemperatureUnitsController, TemperatureUnits>(
-        TemperatureUnitsController.new);

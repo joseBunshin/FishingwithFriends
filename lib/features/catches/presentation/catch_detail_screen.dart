@@ -446,7 +446,7 @@ class _DetailsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final tempUnits = ref.watch(temperatureUnitsProvider);
+    final units = ref.watch(displayUnitsProvider);
     final children = <Widget>[];
 
     final rig = catch_.rig;
@@ -459,7 +459,7 @@ class _DetailsCard extends ConsumerWidget {
       children.add(_DetailRow(label: 'Notes', value: notes));
     }
     if (catch_.conditions.isNotEmpty) {
-      final pills = _conditionPills(catch_.conditions, tempUnits);
+      final pills = _conditionPills(catch_.conditions, units);
       if (pills.isNotEmpty) {
         if (children.isNotEmpty) children.add(const _DetailDivider());
         children.add(_ConditionsRow(pills: pills));
@@ -610,14 +610,14 @@ class _ConditionChip extends StatelessWidget {
 
 List<_ConditionPill> _conditionPills(
   Map<String, dynamic> conditions,
-  TemperatureUnits tempUnits,
+  DisplayUnits units,
 ) {
   final out = <_ConditionPill>[];
   final tempC = conditions['temp_c'];
   if (tempC is num) {
     out.add(_ConditionPill(
       icon: Icons.thermostat_outlined,
-      label: formatTemperature(tempC, tempUnits),
+      label: formatTemperature(tempC, units),
     ));
   }
   final wind = conditions['wind_kph'];
@@ -631,7 +631,7 @@ List<_ConditionPill> _conditionPills(
   if (waterTemp is num) {
     out.add(_ConditionPill(
       icon: Icons.waves,
-      label: 'water ${formatTemperature(waterTemp, tempUnits)}',
+      label: 'water ${formatTemperature(waterTemp, units)}',
     ));
   }
   final tide = conditions['tide_state'];
@@ -664,7 +664,7 @@ List<_ConditionPill> _conditionPills(
     if (t is num) {
       out.add(_ConditionPill(
         icon: Icons.thermostat_outlined,
-        label: formatTemperature(t, tempUnits),
+        label: formatTemperature(t, units),
       ));
     }
   }

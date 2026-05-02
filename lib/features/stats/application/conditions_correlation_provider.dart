@@ -34,7 +34,7 @@ class ConditionsCorrelation {
 /// per top species.
 final conditionsCorrelationProvider =
     FutureProvider<List<ConditionsCorrelation>>((ref) async {
-  final tempUnits = ref.watch(temperatureUnitsProvider);
+  final units = ref.watch(displayUnitsProvider);
   final mine = await ref.watch(myCatchesProvider.future);
   final withConditions = mine
       .where((c) =>
@@ -81,8 +81,8 @@ final conditionsCorrelationProvider =
       final avg = temps.reduce((a, b) => a + b) / temps.length;
       final loC = avg - 3;
       final hiC = avg + 3;
-      final loStr = formatTemperature(loC, tempUnits);
-      final hiStr = formatTemperature(hiC, tempUnits);
+      final loStr = formatTemperature(loC, units);
+      final hiStr = formatTemperature(hiC, units);
       tempBucket = '${_stripUnit(loStr)}–$hiStr water';
     }
     result.add(ConditionsCorrelation(
