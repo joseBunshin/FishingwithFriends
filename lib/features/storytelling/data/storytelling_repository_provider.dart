@@ -34,6 +34,21 @@ final myUserBadgesProvider = FutureProvider<List<UserBadge>>((ref) async {
   return ref.watch(storytellingRepositoryProvider).myUserBadges(user.id);
 });
 
+/// Personal records for any angler id. Visible per the 0020 RLS broadening
+/// (self or accepted friend); empty when viewing a non-friend stranger.
+final personalRecordsForAnglerProvider =
+    FutureProvider.family<List<PersonalRecord>, String>((ref, anglerId) async {
+  if (anglerId.isEmpty) return const [];
+  return ref.watch(storytellingRepositoryProvider).myPersonalRecords(anglerId);
+});
+
+/// Earned badges for any angler id. Visible per the 0020 RLS broadening.
+final userBadgesForAnglerProvider =
+    FutureProvider.family<List<UserBadge>, String>((ref, anglerId) async {
+  if (anglerId.isEmpty) return const [];
+  return ref.watch(storytellingRepositoryProvider).myUserBadges(anglerId);
+});
+
 /// One-shot lookup of what the trigger produced for the given catch id.
 final saveOutcomeProvider =
     FutureProvider.family<SaveOutcome, String>((ref, catchId) async {

@@ -28,6 +28,8 @@ UserBadge _earned(fwf.Badge def) {
   );
 }
 
+const _anglerId = 'u1';
+
 Widget _harness({
   required List<fwf.Badge> all,
   required List<UserBadge> earned,
@@ -35,10 +37,10 @@ Widget _harness({
   return ProviderScope(
     overrides: [
       allBadgesProvider.overrideWith((_) async => all),
-      myUserBadgesProvider.overrideWith((_) async => earned),
+      userBadgesForAnglerProvider(_anglerId).overrideWith((_) async => earned),
     ],
     child: const MaterialApp(
-      home: Scaffold(body: BadgeWall()),
+      home: Scaffold(body: BadgeWall(anglerId: _anglerId)),
     ),
   );
 }

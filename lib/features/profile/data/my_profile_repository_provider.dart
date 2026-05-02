@@ -13,3 +13,12 @@ final myProfileProvider = FutureProvider<Profile?>((ref) async {
   if (user == null) return null;
   return ref.watch(myProfileRepositoryProvider).myProfile(user.id);
 });
+
+/// Any profile by user id. Profiles RLS allows authenticated reads of every
+/// row, so this works for friends and strangers — used by the public
+/// ProfileScreen.
+final profileByIdProvider =
+    FutureProvider.family<Profile?, String>((ref, userId) async {
+  if (userId.isEmpty) return null;
+  return ref.watch(myProfileRepositoryProvider).myProfile(userId);
+});

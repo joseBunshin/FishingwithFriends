@@ -7,9 +7,11 @@ import 'package:fishing_with_friends/features/friends/data/friends_repository.da
 import 'package:fishing_with_friends/features/friends/data/friends_repository_provider.dart';
 import 'package:fishing_with_friends/features/friends/domain/friendship.dart';
 import 'package:fishing_with_friends/features/friends/domain/profile.dart';
+import 'package:fishing_with_friends/features/profile/presentation/widgets/avatar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class FriendsScreen extends ConsumerWidget {
   const FriendsScreen({super.key});
@@ -228,31 +230,39 @@ class _SearchResultRow extends ConsumerWidget {
     }
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
-        ),
-        child: Row(
-          children: [
-            const _AvatarPlaceholder(),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(profile.handle,
-                      style: Theme.of(context).textTheme.titleSmall),
-                  if (profile.displayName != null)
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/profile/${profile.id}'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              AvatarView(avatarPath: profile.avatarPath, radius: 18),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      profile.displayName!,
-                      style: Theme.of(context).textTheme.bodySmall,
+                      profile.displayName?.isNotEmpty ?? false
+                          ? profile.displayName!
+                          : profile.handle,
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
-                ],
+                    if (profile.displayName?.isNotEmpty ?? false)
+                      Text(
+                        profile.handle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                  ],
+                ),
               ),
-            ),
-            action,
-          ],
+              action,
+            ],
+          ),
         ),
       ),
     );
@@ -269,33 +279,38 @@ class _PendingRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(friendsControllerProvider.notifier);
     final busy = ref.watch(friendsControllerProvider).isLoading;
+    final requesterId = friendship.requesterId;
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
-        ),
-        child: Row(
-          children: [
-            const _AvatarPlaceholder(),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                profile?.handle ?? '@unknown',
-                style: Theme.of(context).textTheme.titleSmall,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/profile/$requesterId'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              AvatarView(avatarPath: profile?.avatarPath, radius: 18),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  profile?.handle ?? '@unknown',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
               ),
-            ),
-            TextButton(
-              onPressed: busy ? null : () => controller.reject(friendship),
-              child: const Text('Reject'),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            FilledButton(
-              onPressed: busy ? null : () => controller.accept(friendship),
-              child: const Text('Accept'),
-            ),
-          ],
+              TextButton(
+                onPressed: busy ? null : () => controller.reject(friendship),
+                child: const Text('Reject'),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              FilledButton(
+                onPressed: busy ? null : () => controller.accept(friendship),
+                child: const Text('Accept'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -316,31 +331,49 @@ class _FriendRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final busy = ref.watch(friendsControllerProvider).isLoading;
+    final otherId = friendship.otherSide(currentUserId);
+    final hasDisplayName = profile?.displayName?.isNotEmpty ?? false;
+
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
-        ),
-        child: Row(
-          children: [
-            const _AvatarPlaceholder(),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                profile?.handle ?? '@unknown',
-                style: Theme.of(context).textTheme.titleSmall,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/profile/$otherId'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              AvatarView(avatarPath: profile?.avatarPath, radius: 18),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasDisplayName
+                          ? profile!.displayName!
+                          : profile?.handle ?? '@unknown',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    if (hasDisplayName)
+                      Text(
+                        profile!.handle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                  ],
+                ),
               ),
-            ),
-            IconButton(
-              onPressed: busy
-                  ? null
-                  : () => _confirmRemove(context, ref,
-                      friendship.otherSide(currentUserId)),
-              icon: const Icon(Icons.close),
-              tooltip: 'Remove friend',
-            ),
-          ],
+              IconButton(
+                onPressed: busy
+                    ? null
+                    : () => _confirmRemove(context, ref, otherId),
+                icon: const Icon(Icons.close),
+                tooltip: 'Remove friend',
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -375,20 +408,6 @@ class _FriendRow extends ConsumerWidget {
           .read(friendsControllerProvider.notifier)
           .removeFriend(otherUserId);
     }
-  }
-}
-
-class _AvatarPlaceholder extends StatelessWidget {
-  const _AvatarPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return CircleAvatar(
-      radius: 18,
-      backgroundColor: scheme.primary.withValues(alpha: 0.12),
-      child: Icon(Icons.person, size: 20, color: scheme.primary),
-    );
   }
 }
 

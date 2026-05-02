@@ -102,7 +102,7 @@ class MeScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          const BadgeWall(),
+          BadgeWall(anglerId: user?.id ?? ''),
           const SizedBox(height: AppSpacing.md),
           Card(
             child: ListTile(

@@ -33,7 +33,9 @@ class SupabaseFriendsDataSource implements FriendsDataSource {
 
   final SupabaseClient _client;
 
-  static const _profileColumns = 'id, username, display_name, avatar_path';
+  static const _profileColumns =
+      'id, username, display_name, avatar_path, bio, home_water, '
+      'onboarding_completed_at';
 
   @override
   Future<List<Map<String, dynamic>>> searchProfiles({

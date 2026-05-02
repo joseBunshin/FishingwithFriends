@@ -8,12 +8,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 class BadgeWall extends ConsumerWidget {
-  const BadgeWall({super.key});
+  const BadgeWall({required this.anglerId, super.key});
+
+  /// Angler whose earned badges populate the wall. Locked badges still
+  /// render greyed-out for any angler regardless of who's logged in,
+  /// so visitors see a friend's badge ceiling, not just what they earned.
+  final String anglerId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncBadges = ref.watch(allBadgesProvider);
-    final asyncEarned = ref.watch(myUserBadgesProvider);
+    final asyncEarned = ref.watch(userBadgesForAnglerProvider(anglerId));
 
     return Card(
       child: Padding(

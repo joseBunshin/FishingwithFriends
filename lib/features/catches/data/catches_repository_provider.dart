@@ -67,3 +67,14 @@ final friendsCatchesProvider = FutureProvider<List<Catch>>((ref) async {
         friendIds: friendIds,
       );
 });
+
+/// Catches by a single angler id, read via `catches_friend_view` so
+/// secret-spot GPS is masked. Used by the public ProfileScreen — works
+/// for self and friends; non-friend strangers get an empty list (RLS).
+final catchesForAnglerProvider =
+    FutureProvider.family<List<Catch>, String>((ref, anglerId) async {
+  if (anglerId.isEmpty) return const [];
+  return ref.watch(catchesRepositoryProvider).getFriendsCatches(
+        friendIds: [anglerId],
+      );
+});

@@ -15,6 +15,7 @@ import 'package:fishing_with_friends/features/notifications/presentation/notific
 import 'package:fishing_with_friends/features/profile/data/my_profile_repository_provider.dart';
 import 'package:fishing_with_friends/features/profile/presentation/edit_profile_screen.dart';
 import 'package:fishing_with_friends/features/profile/presentation/onboarding_screen.dart';
+import 'package:fishing_with_friends/features/profile/presentation/profile_screen.dart';
 import 'package:fishing_with_friends/features/settings/presentation/settings_screen.dart';
 import 'package:fishing_with_friends/features/splash/presentation/splash_screen.dart';
 import 'package:fishing_with_friends/features/stats/presentation/stats_screen.dart';
@@ -148,6 +149,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/catches/:id',
         builder: (_, state) =>
             CatchDetailScreen(catchId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/profile/:userId',
+        builder: (_, state) =>
+            ProfileScreen(userId: state.pathParameters['userId']!),
       ),
       GoRoute(
         path: '/trips/:id',

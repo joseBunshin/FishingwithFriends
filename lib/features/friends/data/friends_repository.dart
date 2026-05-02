@@ -156,11 +156,17 @@ class FriendsRepository {
   }
 
   static Profile _profileFromRow(Map<String, dynamic> row) {
+    final onboardingRaw = row['onboarding_completed_at'] as String?;
     return Profile(
       id: row['id'] as String,
       username: row['username'] as String,
       displayName: row['display_name'] as String?,
       avatarPath: row['avatar_path'] as String?,
+      bio: row['bio'] as String?,
+      homeWater: row['home_water'] as String?,
+      onboardingCompletedAt: onboardingRaw == null
+          ? null
+          : DateTime.parse(onboardingRaw).toUtc(),
     );
   }
 
