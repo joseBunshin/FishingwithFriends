@@ -171,11 +171,11 @@ class _CreateTournamentSheetState
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
-                // Only the two metrics the DB enum currently supports.
-                // Biggest Fish / Most Catches / Longest Catch require
-                // adding to public.tournament_metric in a future migration
-                // — exposing them here without DB support throws a 500
-                // on submit. Re-add when the migration ships.
+                // All five player-facing scoring modes. DB enum support
+                // for the latter three landed in migration 0021. The
+                // sixth value `biggestSingle` is reserved for side-pot
+                // computation only — not exposed in the tournament-wide
+                // metric picker.
                 DropdownButtonFormField<TournamentMetric>(
                   initialValue: _metric,
                   decoration: const InputDecoration(
@@ -189,6 +189,18 @@ class _CreateTournamentSheetState
                     DropdownMenuItem(
                       value: TournamentMetric.length,
                       child: Text('Total Length'),
+                    ),
+                    DropdownMenuItem(
+                      value: TournamentMetric.biggestFish,
+                      child: Text('Biggest Fish'),
+                    ),
+                    DropdownMenuItem(
+                      value: TournamentMetric.mostCatches,
+                      child: Text('Most Catches'),
+                    ),
+                    DropdownMenuItem(
+                      value: TournamentMetric.longestCatch,
+                      child: Text('Longest Catch'),
                     ),
                   ],
                   onChanged: (v) =>
