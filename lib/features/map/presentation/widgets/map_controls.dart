@@ -39,7 +39,7 @@ class MapControls extends StatelessWidget {
           Expanded(
             child: _ToggleTile(
               icon: Icons.blur_on,
-              label: 'Heatmap',
+              label: 'Density',
               value: heatmap,
               onChanged: onHeatmapChanged,
             ),

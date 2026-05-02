@@ -2,7 +2,6 @@ import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/map/data/map_points_provider.dart';
 import 'package:fishing_with_friends/features/map/domain/map_point.dart';
-import 'package:fishing_with_friends/features/map/presentation/widgets/conditions_chip_strip.dart';
 import 'package:fishing_with_friends/features/map/presentation/widgets/heatmap_layer.dart';
 import 'package:fishing_with_friends/features/map/presentation/widgets/map_controls.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +20,9 @@ class MapScreen extends ConsumerStatefulWidget {
 
 class _MapScreenState extends ConsumerState<MapScreen> {
   bool _showFriends = true;
-  bool _heatmap = true; // Default ON per origin spec.
+  // Default OFF — pins-first reads cleaner. Density view is opt-in for
+  // users who want the privacy-aware aggregate.
+  bool _heatmap = false;
 
   /// Continental US fallback when the user has no GPS-tagged catches yet.
   static const LatLng _fallbackCenter = LatLng(39.5, -98.35);
@@ -33,10 +34,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final pointsAsync = ref.watch(mapPointsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Catch Map'),
-        actions: const [ConditionsChipStrip()],
-      ),
+      appBar: AppBar(title: const Text('Catch Map')),
       body: Column(
         children: [
           MapControls(

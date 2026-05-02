@@ -4,11 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-/// Bins points into ~0.01° cells (~1km at the equator) and renders each
+/// Bins points into ~0.05° cells (~5.5km at the equator) and renders each
 /// non-empty bin as a semi-transparent square. Density (cells with more
 /// points) reads as more saturated alpha; intentionally chunky so a
 /// secret-spot-suppressed catch can never be inferred from a single
 /// pixel.
+///
+/// 0.05° was tuned for visibility at the default map zoom (~6), where
+/// 0.01° cells render at sub-pixel size and the layer reads as empty.
+/// At higher zooms the cells stay readable; at lower zooms they cluster
+/// naturally without ever exposing exact GPS.
 class HeatmapLayer extends StatelessWidget {
   const HeatmapLayer({
     required this.points,
@@ -19,7 +24,7 @@ class HeatmapLayer extends StatelessWidget {
   final List<MapPoint> points;
   final MapPointSource source;
 
-  static const double _binSizeDeg = 0.01;
+  static const double _binSizeDeg = 0.05;
 
   @override
   Widget build(BuildContext context) {
