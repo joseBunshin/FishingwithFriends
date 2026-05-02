@@ -92,3 +92,50 @@ It writes back a JSONB conditions object:
 - Switch to a paid weather provider when Open-Meteo rate-limits become an issue (current free tier is generous).
 - Add international tide coverage when v1 expands beyond US waters — likely WorldTides or a regional aggregator.
 - Cache nearest-station lookups in a `noaa_station_cache` table when API call volume rises (currently one extra fetch per saltwater catch).
+
+### `delete-account`
+
+Self-serve account deletion required by **Apple Guideline 5.1.1(v)** and **Google Play's Data Safety policy**.
+
+Deployed via:
+
+```bash
+supabase functions deploy delete-account
+```
+
+No secrets to seed — the function only reads the auto-injected `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` env vars.
+
+**Why an edge function instead of a Postgres RPC.** Direct `delete from auth.users` is blocked by Supabase ("direct deletion from tables is not allowed"). The only supported deletion path is `auth.admin.deleteUser(uid)`, which requires the service-role key. We can't ship that key to the Flutter client, so it has to run server-side.
+
+**Flow.** The Flutter client invokes the function with the user's bearer token. The function:
+
+1. Verifies the JWT against `auth.getUser()`.
+2. Wipes storage objects under `avatars/<uid>/` and `catches/<uid>/` (both buckets use a `<uid>/` path prefix).
+3. Calls `admin.deleteUser(uid)` — cascades through `public.profiles` and every dependent FK (`catches`, `trips`, `friendships`, `tournament_members`, `tournament_entries`, `notifications`, `device_tokens`, `notification_preferences`).
+
+#### Verify after deploy
+
+From a TestFlight build (or `flutter run`), sign in as a throwaway test account, navigate **Me → Settings → Danger zone → Delete account**, type `DELETE`, confirm. Then:
+
+```sql
+-- Replace with the deleted user's email.
+select id, email from auth.users where email = 'throwaway@example.com';
+-- Expect 0 rows.
+
+select count(*) from public.profiles where id = '<uid-before-delete>';
+-- Expect 0.
+
+-- Storage path prefix should be empty.
+select count(*) from storage.objects
+  where bucket_id in ('avatars', 'catches')
+    and (storage.foldername(name))[1] = '<uid-before-delete>';
+-- Expect 0.
+```
+
+Re-attempt sign-in with the same email — it should fail (the user no longer exists; sign-up flow can re-claim it).
+
+#### Failure modes
+
+- **`401 unauthorized`** — caller's JWT has expired or sign-in dropped between the dialog and the invoke. Have them sign back in.
+- **`500 auth-delete-failed`** — `admin.deleteUser` returned an error (rare; usually transient). Check the function logs in the Supabase dashboard.
+- **Storage cleanup partial** — function logs a warning and proceeds with the auth deletion. Orphaned storage objects are cleaned up by a periodic sweep (TODO; for now they're invisible since the user is gone).

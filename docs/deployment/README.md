@@ -12,7 +12,8 @@ This is the gate-check before the iOS App Store and Google Play deployments. Cod
 | Version | `1.0.0+1` in `pubspec.yaml` |
 | App icon + native splash | Generated via `flutter_launcher_icons` + `flutter_native_splash` (M7/U11) |
 | Bunshin studio splash | Animated cyan-ghost intro (`lib/features/splash/...`) |
-| Database migrations | 0001 → 0022 — see `docs/SUPABASE_SETUP.md` |
+| Database migrations | 0001 → 0025 — see `docs/SUPABASE_SETUP.md` |
+| Account deletion | In-app self-serve deletion at Me → Settings → Danger zone → Delete account; backed by the `delete-account` edge function (Apple Guideline 5.1.1(v) + Google Data Safety) |
 | Edge functions | `conditions-fill` + `push-dispatch` — see `docs/EDGE_FUNCTIONS.md` |
 | Auth + transactional email | Sign-in / sign-up / forgot-password / reset; templates at `docs/EMAIL_TEMPLATES.md` |
 | Push notifications | Firebase + Supabase pipeline (M6c) — service account configured per project |
@@ -53,7 +54,7 @@ These have to happen **once per target platform** before first submission. Subse
 ### Server-side
 
 - [ ] **Production Supabase project locked** — current `fishing-with-friends-bunshin` project is dev. Decision: split into prod + staging, or run dual-purpose for v1 launch.
-- [ ] **Edge functions deployed** to the production project (see `docs/EDGE_FUNCTIONS.md`).
+- [ ] **Edge functions deployed** to the production project — `conditions-fill`, `push-dispatch`, `delete-account` (see `docs/EDGE_FUNCTIONS.md`).
 - [ ] **`fwf_app_settings` rows seeded** for both edge function URLs + the FCM service account JSON.
 - [ ] **`avatars` bucket public, `catches` bucket private** — verified per migration 0019 + 0002.
 - [ ] **Realtime enabled** for `tournament_entries` + `tournament_chat_messages` (Database → Replication).
@@ -68,6 +69,7 @@ These have to happen **once per target platform** before first submission. Subse
 - [ ] Conditions auto-fill on a real catch (verify edge function reachable from prod)
 - [ ] Tournament create + invite + leaderboard live update
 - [ ] Friends-only RLS — log in as a non-friend, verify no catches visible
+- [ ] In-app account deletion — Me → Settings → Danger zone → Delete account, then re-attempt sign-in to confirm the user is gone (Apple 5.1.1(v) / Google Data Safety)
 
 ---
 

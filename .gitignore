@@ -48,6 +48,9 @@ coverage/
 # Firebase CLI cache
 .firebase/
 
+# Supabase CLI local state (per-developer linked-project metadata)
+supabase/.temp/
+
 # Stray manual screenshots / browser captures dropped at repo root
 .live*.png
 
