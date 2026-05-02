@@ -3,10 +3,12 @@ import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_body_text.dart';
 import 'package:fishing_with_friends/features/friends/data/friends_repository_provider.dart';
+import 'package:fishing_with_friends/features/profile/presentation/widgets/avatar_view.dart';
 import 'package:fishing_with_friends/features/tournaments/data/tournament_chat_repository_provider.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament_chat_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class ChatTab extends ConsumerWidget {
@@ -71,11 +73,10 @@ class _MessageRow extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            child: Icon(Icons.person,
-                size: 16, color: scheme.primary),
+          InkWell(
+            onTap: () => context.push('/profile/${message.authorId}'),
+            customBorder: const CircleBorder(),
+            child: AvatarView(avatarPath: author?.avatarPath, radius: 14),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -84,12 +85,16 @@ class _MessageRow extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      author?.handle ?? '@angler',
-                      style:
-                          Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                    InkWell(
+                      onTap: () =>
+                          context.push('/profile/${message.authorId}'),
+                      child: Text(
+                        author?.handle ?? '@angler',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(

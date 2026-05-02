@@ -6,6 +6,7 @@ import 'package:fishing_with_friends/features/tournaments/domain/tournament.dart
 import 'package:fishing_with_friends/features/tournaments/domain/tournament_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Renders a sorted leaderboard for [entries] under [metric].
 /// Reused by the main board + each side pot.
@@ -89,54 +90,64 @@ class _LeaderboardRowTile extends StatelessWidget {
     final isFirst = rank == 1;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: isFirst
-              ? AppColors.orange.withValues(alpha: 0.08)
-              : scheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: isFirst
-              ? Border.all(color: AppColors.orange.withValues(alpha: 0.3))
-              : null,
-        ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 28,
-              child: Text(
-                '#$rank',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: isFirst ? AppColors.orangeDeep : scheme.onSurface,
-                    ),
-              ),
+      child: Material(
+        color: isFirst
+            ? AppColors.orange.withValues(alpha: 0.08)
+            : scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.push('/profile/${row.anglerId}'),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: isFirst
+                  ? Border.all(color: AppColors.orange.withValues(alpha: 0.3))
+                  : null,
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    handle,
-                    style: Theme.of(context).textTheme.titleSmall,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 28,
+                  child: Text(
+                    '#$rank',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: isFirst
+                              ? AppColors.orangeDeep
+                              : scheme.onSurface,
+                        ),
                   ),
-                  if (row.entryCount > 1)
-                    Text(
-                      '${row.entryCount} entries',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                ],
-              ),
-            ),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: isFirst ? AppColors.orangeDeep : scheme.onSurface,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        handle,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      if (row.entryCount > 1)
+                        Text(
+                          '${row.entryCount} entries',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                    ],
                   ),
+                ),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color:
+                            isFirst ? AppColors.orangeDeep : scheme.onSurface,
+                      ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

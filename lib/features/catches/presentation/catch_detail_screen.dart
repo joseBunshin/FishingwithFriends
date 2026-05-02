@@ -8,6 +8,8 @@ import 'package:fishing_with_friends/features/catches/presentation/widgets/catch
 import 'package:fishing_with_friends/features/catches/presentation/widgets/conditions_block.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/delete_catch_sheet.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_list.dart';
+import 'package:fishing_with_friends/features/friends/data/friends_repository_provider.dart';
+import 'package:fishing_with_friends/features/profile/presentation/widgets/avatar_view.dart';
 import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:fishing_with_friends/features/storytelling/application/share_card_export.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/catch_comparison_line.dart';
@@ -106,6 +108,8 @@ class _Body extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _AnglerLine(anglerId: catch_.anglerId, isMine: isMine),
+                const SizedBox(height: AppSpacing.md),
                 _Headline(catch_: catch_),
                 const SizedBox(height: AppSpacing.sm),
                 CatchComparisonLine(catchId: catch_.id),
@@ -189,6 +193,55 @@ class _ShareActionState extends ConsumerState<_ShareAction> {
             )
           : const Icon(Icons.ios_share),
       onPressed: _busy ? null : _share,
+    );
+  }
+}
+
+class _AnglerLine extends ConsumerWidget {
+  const _AnglerLine({required this.anglerId, required this.isMine});
+
+  final String anglerId;
+  final bool isMine;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bundle = ref.watch(friendsBundleProvider).valueOrNull;
+    final profile = bundle?.profilesById[anglerId];
+    final handle = profile?.handle ?? (isMine ? '@you' : '@angler');
+    final displayName = profile?.displayName?.isNotEmpty ?? false
+        ? profile!.displayName!
+        : null;
+
+    return InkWell(
+      onTap: () => context.push('/profile/$anglerId'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+        child: Row(
+          children: [
+            AvatarView(avatarPath: profile?.avatarPath, radius: 16),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName ?? handle,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  if (displayName != null)
+                    Text(
+                      handle,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, size: 18),
+          ],
+        ),
+      ),
     );
   }
 }

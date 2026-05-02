@@ -6,8 +6,10 @@ import 'package:fishing_with_friends/features/feed/data/feed_writers_provider.da
 import 'package:fishing_with_friends/features/feed/domain/comment.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_body_text.dart';
 import 'package:fishing_with_friends/features/friends/data/friends_repository_provider.dart';
+import 'package:fishing_with_friends/features/profile/presentation/widgets/avatar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class CommentList extends ConsumerWidget {
@@ -78,11 +80,10 @@ class _CommentRow extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: scheme.primary.withValues(alpha: 0.12),
-            child: Icon(Icons.person,
-                size: 16, color: scheme.primary.withValues(alpha: 0.8)),
+          InkWell(
+            onTap: () => context.push('/profile/${comment.authorId}'),
+            customBorder: const CircleBorder(),
+            child: AvatarView(avatarPath: author?.avatarPath, radius: 14),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -91,11 +92,16 @@ class _CommentRow extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      author?.handle ?? (isMine ? '@you' : '@angler'),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                    InkWell(
+                      onTap: () =>
+                          context.push('/profile/${comment.authorId}'),
+                      child: Text(
+                        author?.handle ?? (isMine ? '@you' : '@angler'),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
