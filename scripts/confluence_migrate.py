@@ -270,7 +270,27 @@ def main():
     for fname, title in plan_titles.items():
         page_from_md(plans_id, title, plans_dir / fname)
 
-    # 6. Solutions.
+    # 6. Deployment.
+    print("\n[Deployment]")
+    deploy_id = section_page(
+        fwf_id,
+        "Deployment",
+        "<p>Production deployment guides — readiness checklist and "
+        "platform-by-platform shipping steps for v1.0.0 to the iOS App "
+        "Store and Google Play. Code-side the app is ready; the gating "
+        "items are the once-per-platform setup work (signing, store "
+        "accounts, privacy policy hosting).</p>",
+    )
+    deploy_dir = REPO / "docs" / "deployment"
+    page_from_md(deploy_id, "Deployment Readiness", deploy_dir / "README.md")
+    page_from_md(deploy_id, "iOS — App Store deployment", deploy_dir / "ios.md")
+    page_from_md(
+        deploy_id,
+        "Android — Google Play deployment",
+        deploy_dir / "android.md",
+    )
+
+    # 7. Solutions.
     print("\n[Solutions]")
     sol_id = section_page(
         fwf_id,
