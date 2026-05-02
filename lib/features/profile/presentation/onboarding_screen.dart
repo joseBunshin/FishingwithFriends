@@ -6,6 +6,7 @@ import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/friends/data/friends_repository_provider.dart';
 import 'package:fishing_with_friends/features/friends/domain/profile.dart';
 import 'package:fishing_with_friends/features/profile/data/my_profile_repository_provider.dart';
+import 'package:fishing_with_friends/features/profile/presentation/widgets/avatar_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -238,7 +239,7 @@ class _StepDots extends StatelessWidget {
   }
 }
 
-class _Step1Identity extends StatelessWidget {
+class _Step1Identity extends ConsumerWidget {
   const _Step1Identity({
     required this.displayNameCtl,
     required this.usernameCtl,
@@ -254,7 +255,8 @@ class _Step1Identity extends StatelessWidget {
   final VoidCallback onContinue;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(myProfileProvider).valueOrNull;
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
@@ -268,8 +270,15 @@ class _Step1Identity extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Pick a display name and a handle to get started.',
+            'Pick a display name, a handle, and an avatar to get started.',
             style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          Center(
+            child: AvatarPicker(
+              currentAvatarPath: profile?.avatarPath,
+              radius: 56,
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
           TextField(

@@ -3,6 +3,7 @@ import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/notifications/data/notifications_repository_provider.dart';
 import 'package:fishing_with_friends/features/profile/data/my_profile_repository_provider.dart';
+import 'package:fishing_with_friends/features/profile/presentation/widgets/avatar_picker.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/badge_wall.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/streak_chip.dart';
 import 'package:flutter/material.dart';
@@ -66,10 +67,9 @@ class MeScreen extends ConsumerWidget {
           Center(
             child: Column(
               children: [
-                CircleAvatar(
+                AvatarPicker(
+                  currentAvatarPath: profile?.avatarPath,
                   radius: 48,
-                  backgroundColor: scheme.primary.withValues(alpha: 0.1),
-                  child: Icon(Icons.person, size: 48, color: scheme.primary),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(

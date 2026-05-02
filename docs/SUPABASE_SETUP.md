@@ -54,6 +54,8 @@ on conflict (key) do update
 
 The service-role key (already inserted for the conditions function) is reused.
 
+19. `supabase/migrations/0019_avatars_bucket.sql` — public `avatars` storage bucket with owner-only write policies (gated by user-id-prefixed path). **Required for M7 avatar upload** — without it the picker fails with a storage RLS denial.
+
 **Realtime:** After running 0006, enable Realtime for `tournament_entries` and `tournament_chat_messages` in **Database → Replication** so the live leaderboard + chat update without a refresh.
 
 **M4 introduces no new migrations.** The Catch Map and Stats deepening features are pure read-side against the existing schema. RLS contract from 0001 + the recursion fix in 0007 remain authoritative.

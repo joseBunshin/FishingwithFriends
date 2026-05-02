@@ -2,6 +2,7 @@ import 'package:fishing_with_friends/core/error/app_exception.dart';
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/profile/data/my_profile_repository_provider.dart';
+import 'package:fishing_with_friends/features/profile/presentation/widgets/avatar_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -98,6 +99,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
+              Center(
+                child: AvatarPicker(
+                  currentAvatarPath: profile.avatarPath,
+                  radius: 56,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
               TextField(
                 controller: _displayNameCtl,
                 decoration: const InputDecoration(labelText: 'Display name'),
