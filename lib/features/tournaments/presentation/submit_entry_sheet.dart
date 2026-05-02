@@ -6,6 +6,7 @@ import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/tournaments/application/submit_entry_controller.dart';
 import 'package:fishing_with_friends/features/tournaments/data/tournaments_repository_provider.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament.dart';
+import 'package:fishing_with_friends/features/tournaments/domain/tournament_entry.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament_phase.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -152,9 +153,15 @@ class _CatchList extends ConsumerWidget {
     if (!context.mounted) return;
     if (entry != null) {
       Navigator.of(context).pop();
+      // Auto-approved when the submitter is the creator (server-side).
+      final approved = entry.status == TournamentEntryStatus.approved;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Submitted! The creator will approve.'),
+        SnackBar(
+          content: Text(
+            approved
+                ? "It's on the leaderboard."
+                : 'Submitted! The creator will approve.',
+          ),
         ),
       );
       return;
