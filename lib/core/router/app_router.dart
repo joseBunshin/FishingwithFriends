@@ -14,6 +14,7 @@ import 'package:fishing_with_friends/features/profile/data/my_profile_repository
 import 'package:fishing_with_friends/features/profile/presentation/edit_profile_screen.dart';
 import 'package:fishing_with_friends/features/profile/presentation/onboarding_screen.dart';
 import 'package:fishing_with_friends/features/settings/presentation/settings_screen.dart';
+import 'package:fishing_with_friends/features/splash/presentation/splash_screen.dart';
 import 'package:fishing_with_friends/features/stats/presentation/stats_screen.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/celebration_screen.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/year_in_review_screen.dart';
@@ -27,6 +28,7 @@ import 'package:go_router/go_router.dart';
 class AppRoutes {
   const AppRoutes._();
 
+  static const splash = '/splash';
   static const signIn = '/sign-in';
   static const onboarding = '/onboarding';
   static const home = '/home';
@@ -45,14 +47,19 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(notifier.dispose);
 
   return GoRouter(
-    initialLocation: AppRoutes.home,
+    initialLocation: AppRoutes.splash,
     refreshListenable: notifier,
     redirect: (context, state) {
       final user = ref.read(currentUserProvider);
       final isSignedIn = user != null;
+      final goingToSplash = state.matchedLocation == AppRoutes.splash;
       final goingToSignIn = state.matchedLocation == AppRoutes.signIn;
       final goingToOnboarding =
           state.matchedLocation == AppRoutes.onboarding;
+
+      // The splash screen owns the route hand-off itself once its
+      // animation completes — never redirect away from it.
+      if (goingToSplash) return null;
 
       if (!isSignedIn && !goingToSignIn) return AppRoutes.signIn;
       if (isSignedIn && goingToSignIn) return AppRoutes.home;
@@ -79,6 +86,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: AppRoutes.splash,
+        builder: (_, __) => const SplashScreen(),
+      ),
       GoRoute(
         path: AppRoutes.signIn,
         builder: (_, __) => const SignInScreen(),
