@@ -148,6 +148,10 @@ class LocationMapCard extends StatelessWidget {
 
 /// Fullscreen map zoomed to a single coordinate. Push via
 /// MaterialPageRoute — uses native back-button navigation.
+///
+/// Layout matches MapScreen: Column → Expanded → Stack → FlutterMap.
+/// Direct FlutterMap-as-Scaffold-body has flaky sizing on Flutter web
+/// (renders an empty viewport), Stack-wrapped is reliable.
 class LocationDetailScreen extends StatelessWidget {
   const LocationDetailScreen({
     required this.latitude,
@@ -165,85 +169,122 @@ class LocationDetailScreen extends StatelessWidget {
     final point = LatLng(latitude, longitude);
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: FlutterMap(
-        options: MapOptions(
-          initialCenter: point,
-          initialZoom: 14,
-          interactionOptions: const InteractionOptions(
-            flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-          ),
-        ),
+      body: Column(
         children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.bunshin.fishingwithfriends',
-            tileProvider: CancellableNetworkTileProvider(),
-            maxNativeZoom: 19,
-          ),
-          MarkerLayer(
-            markers: [
-              Marker(
-                point: point,
-                width: 40,
-                height: 40,
-                child: const Icon(
-                  Icons.location_on,
-                  color: AppColors.orange,
-                  size: 40,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.navy,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-            child: Row(
+          Expanded(
+            child: Stack(
               children: [
-                const Icon(
-                  Icons.my_location,
-                  size: 18,
-                  color: AppColors.orange,
+                FlutterMap(
+                  options: MapOptions(
+                    initialCenter: point,
+                    initialZoom: 14,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                    ),
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName:
+                          'com.bunshin.fishingwithfriends',
+                      tileProvider: CancellableNetworkTileProvider(),
+                      maxNativeZoom: 19,
+                    ),
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: point,
+                          width: 40,
+                          height: 40,
+                          child: const Icon(
+                            Icons.location_on,
+                            color: AppColors.orange,
+                            size: 40,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Coordinates',
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.6,
-                        ),
-                      ),
-                      Text(
-                        '${latitude.toStringAsFixed(6)}, '
-                        '${longitude.toStringAsFixed(6)}',
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+                Positioned(
+                  left: AppSpacing.lg,
+                  right: AppSpacing.lg,
+                  bottom: AppSpacing.lg,
+                  child: _CoordinatePanel(
+                    latitude: latitude,
+                    longitude: longitude,
                   ),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CoordinatePanel extends StatelessWidget {
+  const _CoordinatePanel({required this.latitude, required this.longitude});
+
+  final double latitude;
+  final double longitude;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.navy,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.navy.withValues(alpha: 0.18),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.my_location,
+              size: 18,
+              color: AppColors.orange,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'COORDINATES',
+                    style: TextStyle(
+                      color: AppColors.mist.withValues(alpha: 0.8),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                  Text(
+                    '${latitude.toStringAsFixed(6)}, '
+                    '${longitude.toStringAsFixed(6)}',
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
