@@ -510,7 +510,45 @@ join (
 join _seed_users u on u.alias = v.user_alias;
 
 -- ----------------------------------------------------------------------------
--- 9. Sanity output — counts so you can see what landed.
+-- 9. OPTIONAL — wire your real (app login) account into the seed graph.
+--
+-- The seed is fully synthetic — jose.diaz@bunshin.io is just one of four
+-- mock anglers. If you're logged into the app as a different email
+-- (e.g. your real Supabase signup), you won't see any seed data because
+-- friend-only RLS hides every catch.
+--
+-- Set REAL_EMAIL below to your app login. If it matches a row in
+-- auth.users, this block makes you an accepted friend of all 4 mocks
+-- AND an accepted member of Spring Bass Brawl. If REAL_EMAIL is left
+-- as the default placeholder or doesn't exist in auth.users, the block
+-- is a no-op.
+-- ----------------------------------------------------------------------------
+
+do $$
+declare
+  real_email text := 'PUT_YOUR_APP_EMAIL_HERE@example.com';
+  real_uid uuid;
+begin
+  select id into real_uid from auth.users where email = real_email;
+  if real_uid is null then
+    return;  -- placeholder unset or email not in auth.users — skip
+  end if;
+
+  insert into public.friendships (requester_id, addressee_id, status)
+  select real_uid, s.id, 'accepted'::public.friendship_status
+  from _seed_users s
+  on conflict (requester_id, addressee_id) do nothing;
+
+  insert into public.tournament_members (tournament_id, angler_id, status, approved_by)
+  select t.id, real_uid, 'accepted'::public.tournament_member_status, t.creator_id
+  from public.tournaments t
+  where t.creator_id = (select id from _seed_users where alias = 'jose')
+    and t.name = 'Spring Bass Brawl'
+  on conflict (tournament_id, angler_id) do nothing;
+end $$;
+
+-- ----------------------------------------------------------------------------
+-- 10. Sanity output — counts so you can see what landed.
 -- ----------------------------------------------------------------------------
 select
   (select count(*) from public.profiles  where id in (select id from _seed_users))   as profiles,
