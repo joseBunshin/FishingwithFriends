@@ -23,6 +23,12 @@ class NotificationsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Notifications'),
         actions: [
+          IconButton(
+            tooltip: 'Notification preferences',
+            icon: const Icon(Icons.tune),
+            onPressed: () =>
+                context.push('/me/notifications/preferences'),
+          ),
           if (unread > 0)
             TextButton(
               onPressed: () async {

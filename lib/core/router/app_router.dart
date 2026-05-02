@@ -8,6 +8,7 @@ import 'package:fishing_with_friends/features/friends/presentation/friends_scree
 import 'package:fishing_with_friends/features/home/presentation/home_screen.dart';
 import 'package:fishing_with_friends/features/map/presentation/map_screen.dart';
 import 'package:fishing_with_friends/features/me/presentation/me_screen.dart';
+import 'package:fishing_with_friends/features/notifications/presentation/notification_preferences_screen.dart';
 import 'package:fishing_with_friends/features/notifications/presentation/notifications_screen.dart';
 import 'package:fishing_with_friends/features/profile/data/my_profile_repository_provider.dart';
 import 'package:fishing_with_friends/features/profile/presentation/edit_profile_screen.dart';
@@ -93,6 +94,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/me/notifications',
         builder: (_, __) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/me/notifications/preferences',
+        builder: (_, __) => const NotificationPreferencesScreen(),
       ),
       GoRoute(
         path: '/me/settings',

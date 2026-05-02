@@ -39,6 +39,20 @@ Open **SQL Editor → New query** and run, in order:
 14. `supabase/migrations/0014_creator_auto_member.sql` — AFTER INSERT trigger on `tournaments` that auto-enrolls the creator as an `accepted` row in `tournament_members`, plus a one-time backfill for existing tournaments. **Fix for M3** — without it, tournament creators hit RLS when submitting their own catch as an entry (`new row violates row-level security policy for table "tournament_entries"`).
 15. `supabase/migrations/0015_auto_approve_creator_entries.sql` — BEFORE INSERT trigger on `tournament_entries` that auto-stamps `status='approved'` when the submitting angler is the tournament creator. Otherwise creators have to "approve" their own entries, which is a no-op tap that confuses everyone. Backfills any existing pending creator entries.
 16. `supabase/migrations/0016_catches_latlng_columns.sql` — adds plain `latitude`/`longitude` numeric columns to `catches`, kept in sync with `location` via a BEFORE INSERT/UPDATE trigger, plus a one-time backfill. Recreates `catches_friend_view` to expose them. Without this, the catch detail screen renders "Location not captured" even when GPS was set, because Supabase serializes `geography` as EWKB hex which the Flutter DTO can't parse.
+17. `supabase/migrations/0017_push_schema.sql` — `device_tokens` (per-device FCM token) + `notification_preferences` (per-user category toggles) tables with RLS, plus the `fwf_lookup_push_recipients` security-definer helper that the dispatch edge function calls.
+18. `supabase/migrations/0018_push_dispatch_trigger.sql` — AFTER INSERT trigger on `notifications` that calls the `push-dispatch` edge function via `pg_net`. **Optional for M6c** — if the edge function URL isn't configured (`app.settings.push_dispatch_fn_url`), the trigger no-ops.
+
+After running 0017 + 0018, also insert the dispatch URL into `fwf_app_settings`:
+
+```sql
+insert into public.fwf_app_settings (key, value) values
+  ('app.settings.push_dispatch_fn_url',
+   'https://YOUR-REF.supabase.co/functions/v1/push-dispatch')
+on conflict (key) do update
+  set value = excluded.value, updated_at = now();
+```
+
+The service-role key (already inserted for the conditions function) is reused.
 
 **Realtime:** After running 0006, enable Realtime for `tournament_entries` and `tournament_chat_messages` in **Database → Replication** so the live leaderboard + chat update without a refresh.
 
