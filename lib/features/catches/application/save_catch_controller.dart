@@ -17,8 +17,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// - `AsyncLoading()` — submission in flight; UI shows progress + disables Save
 /// - `AsyncError` — submission failed; UI shows the error.message
 class SaveCatchController extends AsyncNotifier<void> {
+  bool _disposed = false;
+
   @override
-  FutureOr<void> build() {}
+  FutureOr<void> build() {
+    ref.onDispose(() => _disposed = true);
+  }
 
   /// Returns the persisted catch on success, `null` on failure (state already
   /// holds the AsyncError for the UI to read).
@@ -71,10 +75,36 @@ class SaveCatchController extends AsyncNotifier<void> {
         ref.read(pushRegistrationServiceProvider).requestAndRegister(),
       );
 
+      // Conditions auto-fill is async server-side (pg_net trigger →
+      // edge function → service-role UPDATE on the catch row). The row
+      // we just inserted has conditions={} until the function writes
+      // back ~3-5s later. Schedule two re-fetches so the catch detail
+      // and grid pick up the populated conditions without the user
+      // having to pull-to-refresh.
+      _scheduleConditionsRefetch(saved.id);
+
       return saved;
     } on AppException catch (e, st) {
       state = AsyncError(e, st);
       return null;
+    }
+  }
+
+  /// Re-fetch the catch + the grid at +5s and +12s so the conditions
+  /// block populates on the detail screen as soon as the edge function
+  /// writes back. No-op when the catch's providers are no longer
+  /// observed.
+  void _scheduleConditionsRefetch(String catchId) {
+    for (final delay in const [
+      Duration(seconds: 5),
+      Duration(seconds: 12),
+    ]) {
+      Future<void>.delayed(delay).then((_) {
+        if (_disposed) return;
+        ref
+          ..invalidate(catchByIdProvider(catchId))
+          ..invalidate(syncedMyCatchesProvider);
+      });
     }
   }
 }
