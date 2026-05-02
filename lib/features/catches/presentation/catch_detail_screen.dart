@@ -163,10 +163,11 @@ class _ShareActionState extends ConsumerState<_ShareAction> {
             context: context,
             catch_: widget.catch_,
           );
-    } on Object catch (_) {
+    } on Object catch (e, st) {
+      debugPrint('Share card failed: $e\n$st');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Couldn't build share card.")),
+        SnackBar(content: Text("Couldn't build share card: $e")),
       );
     } finally {
       if (mounted) setState(() => _busy = false);

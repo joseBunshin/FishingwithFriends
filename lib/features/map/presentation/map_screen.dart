@@ -171,7 +171,7 @@ class _MapBody extends StatelessWidget {
       width: 32,
       height: 32,
       child: GestureDetector(
-        onTap: () => context.push('/catch/${p.catchId}'),
+        onTap: () => context.push('/catches/${p.catchId}'),
         child: _PinIcon(color: color, isInMpa: p.isInMpa),
       ),
     );
