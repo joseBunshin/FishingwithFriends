@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/core/units/measurement_format.dart';
 import 'package:fishing_with_friends/features/catches/data/signed_url_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
+import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:fishing_with_friends/features/sync/data/pending_catches_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -157,29 +159,16 @@ class _SpeciesPill extends StatelessWidget {
   }
 }
 
-class _MetaRow extends StatelessWidget {
+class _MetaRow extends ConsumerWidget {
   const _MetaRow({required this.catch_});
 
   final Catch catch_;
 
-  String? _weightText() {
-    final kg = catch_.weightKg;
-    if (kg == null) return null;
-    final lbs = kg * 2.20462;
-    return '${lbs.toStringAsFixed(1)} lbs';
-  }
-
-  String? _lengthText() {
-    final cm = catch_.lengthCm;
-    if (cm == null) return null;
-    final inches = cm / 2.54;
-    return '${inches.toStringAsFixed(1)}"';
-  }
-
   @override
-  Widget build(BuildContext context) {
-    final weight = _weightText();
-    final length = _lengthText();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final units = ref.watch(displayUnitsProvider);
+    final weight = formatWeight(catch_.weightKg, units);
+    final length = formatLength(catch_.lengthCm, units);
     final parts = <String>[
       if (weight != null) weight,
       if (length != null) length,

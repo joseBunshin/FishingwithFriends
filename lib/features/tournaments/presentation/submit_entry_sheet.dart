@@ -1,8 +1,10 @@
 import 'package:fishing_with_friends/core/error/app_exception.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/core/units/measurement_format.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
+import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:fishing_with_friends/features/tournaments/application/submit_entry_controller.dart';
 import 'package:fishing_with_friends/features/tournaments/data/tournaments_repository_provider.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament.dart';
@@ -283,17 +285,16 @@ class _TournamentList extends ConsumerWidget {
   }
 }
 
-class _CatchTile extends StatelessWidget {
+class _CatchTile extends ConsumerWidget {
   const _CatchTile({required this.catch_, required this.onTap});
 
   final Catch catch_;
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final weight = catch_.weightKg == null
-        ? '—'
-        : '${(catch_.weightKg! * 2.20462).toStringAsFixed(1)} lbs';
+  Widget build(BuildContext context, WidgetRef ref) {
+    final units = ref.watch(displayUnitsProvider);
+    final weight = formatWeight(catch_.weightKg, units) ?? '—';
     return Card(
       child: ListTile(
         title: Text(catch_.speciesLabel ?? 'Catch'),

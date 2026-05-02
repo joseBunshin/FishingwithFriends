@@ -1,11 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/core/units/measurement_format.dart';
 import 'package:fishing_with_friends/features/catches/data/signed_url_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/feed/domain/feed_item.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/feed_item_header.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/reaction_strip.dart';
+import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -111,24 +113,21 @@ class _PlaceholderTile extends StatelessWidget {
   }
 }
 
-class _MetaRow extends StatelessWidget {
+class _MetaRow extends ConsumerWidget {
   const _MetaRow({required this.catch_});
 
   final Catch catch_;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final units = ref.watch(displayUnitsProvider);
     final parts = <String>[];
     final species = catch_.speciesLabel ?? catch_.speciesId;
     if (species != null && species.isNotEmpty) parts.add(species);
-    if (catch_.weightKg != null) {
-      final lbs = (catch_.weightKg! * 2.20462).toStringAsFixed(1);
-      parts.add('$lbs lbs');
-    }
-    if (catch_.lengthCm != null) {
-      final inches = (catch_.lengthCm! / 2.54).toStringAsFixed(1);
-      parts.add('$inches"');
-    }
+    final w = formatWeight(catch_.weightKg, units);
+    if (w != null) parts.add(w);
+    final l = formatLength(catch_.lengthCm, units);
+    if (l != null) parts.add(l);
     return Row(
       children: [
         if (catch_.catchAndRelease)

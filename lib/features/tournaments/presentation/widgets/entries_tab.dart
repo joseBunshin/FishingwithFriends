@@ -1,5 +1,7 @@
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/core/units/measurement_format.dart';
 import 'package:fishing_with_friends/features/friends/data/friends_repository_provider.dart';
+import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:fishing_with_friends/features/tournaments/application/tournament_entry_controller.dart';
 import 'package:fishing_with_friends/features/tournaments/domain/tournament_entry.dart';
 import 'package:flutter/material.dart';
@@ -101,12 +103,9 @@ class _EntryRow extends ConsumerWidget {
         ref.watch(tournamentEntryControllerProvider).isLoading;
     final scheme = Theme.of(context).colorScheme;
 
-    final weight = entry.weightKg == null
-        ? '—'
-        : '${(entry.weightKg! * 2.20462).toStringAsFixed(1)} lbs';
-    final length = entry.lengthCm == null
-        ? '—'
-        : '${(entry.lengthCm! / 2.54).toStringAsFixed(1)}"';
+    final units = ref.watch(displayUnitsProvider);
+    final weight = formatWeight(entry.weightKg, units) ?? '—';
+    final length = formatLength(entry.lengthCm, units) ?? '—';
 
     final canApprove =
         isCreator && entry.status == TournamentEntryStatus.pending;

@@ -16,22 +16,52 @@ const _kUnitsKey = 'app.display_units';
 
 /// Loaded once on app boot. Holds the SharedPreferences singleton + the
 /// initial values to seed the providers.
+///
+/// Tests don't have to override the provider — the default is an
+/// in-memory implementation backed by a plain `Map<String, String>`,
+/// which gives them imperial-units + system-theme defaults without any
+/// platform plugin setup.
 class AppPreferences {
-  AppPreferences(this._prefs);
+  /// Production constructor — wraps SharedPreferences.
+  factory AppPreferences(SharedPreferences prefs) =>
+      AppPreferences._(prefs: prefs);
 
-  final SharedPreferences _prefs;
+  AppPreferences._({
+    SharedPreferences? prefs,
+    Map<String, String>? memory,
+  })  : _prefs = prefs,
+        _memory = memory;
+
+  /// Test / fallback constructor — pure in-memory map.
+  factory AppPreferences.inMemory([
+    Map<String, String> seed = const {},
+  ]) =>
+      AppPreferences._(memory: Map<String, String>.from(seed));
+
+  final SharedPreferences? _prefs;
+  final Map<String, String>? _memory;
+
+  String? _read(String key) =>
+      _prefs != null ? _prefs.getString(key) : _memory?[key];
+
+  Future<void> _write(String key, String value) async {
+    if (_prefs != null) {
+      await _prefs.setString(key, value);
+    } else {
+      _memory![key] = value;
+    }
+  }
 
   ThemeMode get themeMode {
-    final raw = _prefs.getString(_kThemeKey);
-    return switch (raw) {
+    return switch (_read(_kThemeKey)) {
       'light' => ThemeMode.light,
       'dark' => ThemeMode.dark,
       _ => ThemeMode.system,
     };
   }
 
-  Future<void> setThemeMode(ThemeMode mode) async {
-    await _prefs.setString(
+  Future<void> setThemeMode(ThemeMode mode) {
+    return _write(
       _kThemeKey,
       switch (mode) {
         ThemeMode.light => 'light',
@@ -42,12 +72,13 @@ class AppPreferences {
   }
 
   DisplayUnits get displayUnits {
-    final raw = _prefs.getString(_kUnitsKey);
-    return raw == 'metric' ? DisplayUnits.metric : DisplayUnits.imperial;
+    return _read(_kUnitsKey) == 'metric'
+        ? DisplayUnits.metric
+        : DisplayUnits.imperial;
   }
 
-  Future<void> setDisplayUnits(DisplayUnits units) async {
-    await _prefs.setString(
+  Future<void> setDisplayUnits(DisplayUnits units) {
+    return _write(
       _kUnitsKey,
       units == DisplayUnits.metric ? 'metric' : 'imperial',
     );
@@ -55,12 +86,10 @@ class AppPreferences {
 }
 
 /// Initialized in `main.dart` via `appPreferencesProvider.overrideWithValue`.
-/// Throws when read before initialization to surface bootstrap-order bugs.
+/// Defaults to an in-memory implementation so widget tests that don't
+/// care about preferences don't have to override anything.
 final appPreferencesProvider = Provider<AppPreferences>((ref) {
-  throw StateError(
-    'appPreferencesProvider must be overridden at app boot. '
-    'See main.dart.',
-  );
+  return AppPreferences.inMemory();
 });
 
 class ThemeModeController extends Notifier<ThemeMode> {

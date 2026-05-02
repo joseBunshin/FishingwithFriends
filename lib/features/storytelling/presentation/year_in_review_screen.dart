@@ -1,5 +1,7 @@
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/core/units/measurement_format.dart';
+import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:fishing_with_friends/features/storytelling/application/year_in_review_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -212,12 +214,12 @@ class _IntroCard extends StatelessWidget {
   }
 }
 
-class _BiggestCard extends StatelessWidget {
+class _BiggestCard extends ConsumerWidget {
   const _BiggestCard({required this.s});
   final YearInReviewSummary s;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = s.biggest;
     if (c == null || c.weightKg == null) {
       return const _PageScaffold(
@@ -226,10 +228,11 @@ class _BiggestCard extends StatelessWidget {
         body: SizedBox.shrink(),
       );
     }
-    final lbs = (c.weightKg! * 2.20462).toStringAsFixed(1);
+    final units = ref.watch(displayUnitsProvider);
+    final headline = formatWeight(c.weightKg, units) ?? '—';
     return _PageScaffold(
       kicker: 'BIGGEST',
-      headline: '$lbs lbs',
+      headline: headline,
       body: Text(
         c.speciesLabel ?? 'Catch',
         style: const TextStyle(color: AppColors.mist, fontSize: 24),
@@ -273,12 +276,12 @@ class _DaysCard extends StatelessWidget {
   }
 }
 
-class _TripCard extends StatelessWidget {
+class _TripCard extends ConsumerWidget {
   const _TripCard({required this.s});
   final YearInReviewSummary s;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = s.biggestTrip;
     if (t == null || s.biggestTripWeightKg == 0) {
       return const _PageScaffold(
@@ -287,12 +290,13 @@ class _TripCard extends StatelessWidget {
         body: SizedBox.shrink(),
       );
     }
-    final lbs = (s.biggestTripWeightKg * 2.20462).toStringAsFixed(1);
+    final units = ref.watch(displayUnitsProvider);
+    final total = formatWeight(s.biggestTripWeightKg, units) ?? '—';
     return _PageScaffold(
       kicker: 'BIGGEST TRIP',
       headline: t.title,
       body: Text(
-        '$lbs lbs total',
+        '$total total',
         style: const TextStyle(color: AppColors.mist, fontSize: 24),
       ),
     );

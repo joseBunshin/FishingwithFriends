@@ -1,6 +1,8 @@
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/core/units/measurement_format.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
+import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:fishing_with_friends/features/storytelling/data/storytelling_repository_provider.dart';
 import 'package:fishing_with_friends/features/storytelling/domain/personal_record.dart';
 import 'package:fishing_with_friends/features/storytelling/domain/save_outcome.dart';
@@ -107,9 +109,10 @@ class _PRPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final units = ref.watch(displayUnitsProvider);
     final value = record.metric == PrMetric.weightKg
-        ? '${(record.value * 2.20462).toStringAsFixed(1)} lbs'
-        : '${(record.value / 2.54).toStringAsFixed(1)} in';
+        ? formatWeight(record.value, units) ?? '—'
+        : formatLength(record.value, units) ?? '—';
     final species = record.speciesLabel ?? 'this species';
     return _PageScaffold(
       headlineKicker: 'NEW PR!',

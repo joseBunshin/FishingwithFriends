@@ -1,10 +1,12 @@
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/core/units/measurement_format.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/catch_photo_carousel.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/conditions_block.dart';
 import 'package:fishing_with_friends/features/feed/presentation/widgets/comment_list.dart';
+import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:fishing_with_friends/features/storytelling/application/share_card_export.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/catch_comparison_line.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/submit_entry_sheet.dart';
@@ -188,21 +190,22 @@ class _Headline extends StatelessWidget {
   }
 }
 
-class _MeasurementRow extends StatelessWidget {
+class _MeasurementRow extends ConsumerWidget {
   const _MeasurementRow({required this.catch_});
 
   final Catch catch_;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final units = ref.watch(displayUnitsProvider);
     final pills = <Widget>[];
-    if (catch_.weightKg != null) {
-      final lbs = (catch_.weightKg! * 2.20462).toStringAsFixed(1);
-      pills.add(_MeasurementPill(icon: Icons.scale_outlined, text: '$lbs lbs'));
+    final weight = formatWeight(catch_.weightKg, units);
+    if (weight != null) {
+      pills.add(_MeasurementPill(icon: Icons.scale_outlined, text: weight));
     }
-    if (catch_.lengthCm != null) {
-      final inches = (catch_.lengthCm! / 2.54).toStringAsFixed(1);
-      pills.add(_MeasurementPill(icon: Icons.straighten, text: '$inches in'));
+    final length = formatLength(catch_.lengthCm, units);
+    if (length != null) {
+      pills.add(_MeasurementPill(icon: Icons.straighten, text: length));
     }
     if (catch_.catchAndRelease) {
       pills.add(const _MeasurementPill(

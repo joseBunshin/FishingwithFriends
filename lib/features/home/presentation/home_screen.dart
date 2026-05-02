@@ -1,6 +1,7 @@
 import 'package:fishing_with_friends/core/router/app_router.dart';
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
+import 'package:fishing_with_friends/core/units/measurement_format.dart';
 import 'package:fishing_with_friends/features/feed/data/feed_repository_provider.dart';
 import 'package:fishing_with_friends/features/feed/domain/feed_item.dart';
 import 'package:fishing_with_friends/features/feed/presentation/feed_item_card.dart';
@@ -8,6 +9,7 @@ import 'package:fishing_with_friends/features/home/data/home_metrics_provider.da
 import 'package:fishing_with_friends/features/home/domain/home_metrics.dart';
 import 'package:fishing_with_friends/features/home/presentation/widgets/action_chips.dart';
 import 'package:fishing_with_friends/features/home/presentation/widgets/stat_tile.dart';
+import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:fishing_with_friends/features/sync/presentation/widgets/sync_pill.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -81,27 +83,20 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _StatGrid extends StatelessWidget {
+class _StatGrid extends ConsumerWidget {
   const _StatGrid({required this.metrics});
 
   final HomeMetrics metrics;
 
-  String get _totalWeightDisplay {
-    final lbs = metrics.totalWeightKg * 2.20462;
-    return '${lbs.toStringAsFixed(1)} lbs';
-  }
-
   String? get _biggestSubtitle => metrics.biggestSpecies;
 
-  String get _biggestValue {
-    final kg = metrics.biggestWeightKg;
-    if (kg == null) return '—';
-    final lbs = kg * 2.20462;
-    return '${lbs.toStringAsFixed(0)} lbs';
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final units = ref.watch(displayUnitsProvider);
+    final totalWeightDisplay =
+        formatWeight(metrics.totalWeightKg, units) ?? '—';
+    final biggestValue =
+        formatWeight(metrics.biggestWeightKg, units, compact: true) ?? '—';
     return Column(
       children: [
         Row(
@@ -117,7 +112,7 @@ class _StatGrid extends StatelessWidget {
             Expanded(
               child: StatTile(
                 label: 'Total Weight',
-                value: _totalWeightDisplay,
+                value: totalWeightDisplay,
                 icon: Icons.scale_outlined,
               ),
             ),
@@ -137,7 +132,7 @@ class _StatGrid extends StatelessWidget {
             Expanded(
               child: StatTile(
                 label: 'Biggest',
-                value: _biggestValue,
+                value: biggestValue,
                 caption: _biggestSubtitle,
                 icon: Icons.workspace_premium_outlined,
               ),
