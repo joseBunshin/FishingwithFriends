@@ -4,6 +4,7 @@ import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/catches/presentation/widgets/catch_card.dart';
+import 'package:fishing_with_friends/features/sync/presentation/widgets/sync_pill.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +20,7 @@ class CatchesScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('My Catches'),
         actions: [
+          const SyncPill(),
           IconButton(
             onPressed: () => context.push(AppRoutes.logCatch),
             icon: const Icon(Icons.add_circle_outline),

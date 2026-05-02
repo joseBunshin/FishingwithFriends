@@ -21,6 +21,14 @@ final pendingCatchesProvider = StreamProvider<List<Catch>>((ref) {
       );
 });
 
+/// Efficient `contains` lookup for tiles deciding whether to render an
+/// upload-pending badge.
+final pendingCatchIdsProvider = Provider<Set<String>>((ref) {
+  final pending =
+      ref.watch(pendingCatchesProvider).valueOrNull ?? const <Catch>[];
+  return {for (final c in pending) c.id};
+});
+
 Catch _cacheRowToDomain(CatchesCacheData row) {
   return Catch(
     id: row.id,

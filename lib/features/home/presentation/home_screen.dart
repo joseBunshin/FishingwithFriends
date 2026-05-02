@@ -8,6 +8,7 @@ import 'package:fishing_with_friends/features/home/data/home_metrics_provider.da
 import 'package:fishing_with_friends/features/home/domain/home_metrics.dart';
 import 'package:fishing_with_friends/features/home/presentation/widgets/action_chips.dart';
 import 'package:fishing_with_friends/features/home/presentation/widgets/stat_tile.dart';
+import 'package:fishing_with_friends/features/sync/presentation/widgets/sync_pill.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,7 +24,10 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
+      appBar: AppBar(
+        title: const Text('Home'),
+        actions: const [SyncPill()],
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref

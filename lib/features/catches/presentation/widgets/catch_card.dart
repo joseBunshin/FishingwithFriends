@@ -3,6 +3,7 @@ import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/catches/data/signed_url_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
+import 'package:fishing_with_friends/features/sync/data/pending_catches_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,6 +18,9 @@ class CatchCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pendingIds = ref.watch(pendingCatchIdsProvider);
+    final isPending = pendingIds.contains(catch_.id);
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -40,6 +44,12 @@ class CatchCard extends ConsumerWidget {
                       left: AppSpacing.sm,
                       child: _SpeciesPill(label: catch_.speciesLabel!),
                     ),
+                  if (isPending)
+                    const Positioned(
+                      top: AppSpacing.sm,
+                      right: AppSpacing.sm,
+                      child: _UploadBadge(),
+                    ),
                 ],
               ),
             ),
@@ -48,6 +58,29 @@ class CatchCard extends ConsumerWidget {
               child: _MetaRow(catch_: catch_),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UploadBadge extends StatelessWidget {
+  const _UploadBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xs),
+      decoration: const BoxDecoration(
+        color: AppColors.orange,
+        shape: BoxShape.circle,
+      ),
+      child: const SizedBox(
+        width: 12,
+        height: 12,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: AppColors.white,
         ),
       ),
     );
