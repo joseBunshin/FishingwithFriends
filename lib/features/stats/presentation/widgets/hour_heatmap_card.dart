@@ -1,4 +1,3 @@
-import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/features/stats/application/stats_time_of_day_provider.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +19,10 @@ class HourHeatmapCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.access_time, color: AppColors.navy),
+                Icon(
+                  Icons.access_time,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Time of day',
@@ -85,16 +87,17 @@ class _HourCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final ratio = maxCount == 0 ? 0.0 : count / maxCount;
     final alpha = count == 0 ? 0.05 : 0.2 + 0.7 * ratio;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.navy.withValues(alpha: alpha),
+          color: scheme.primary.withValues(alpha: alpha),
           borderRadius: BorderRadius.circular(AppSpacing.radiusSm / 2),
           border: count == 0
-              ? Border.all(color: AppColors.mist, width: 0.5)
+              ? Border.all(color: scheme.outlineVariant, width: 0.5)
               : null,
         ),
       ),

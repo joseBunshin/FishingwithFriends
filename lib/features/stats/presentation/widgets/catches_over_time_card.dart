@@ -19,7 +19,10 @@ class CatchesOverTimeCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.bar_chart_outlined, color: AppColors.navy),
+                Icon(
+                  Icons.bar_chart_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Catches over time',
@@ -114,7 +117,7 @@ class _Bar extends StatelessWidget {
             child: Container(
               height: c.maxHeight * ratio,
               decoration: BoxDecoration(
-                color: AppColors.navy,
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius:
                     BorderRadius.circular(AppSpacing.radiusSm / 2),
               ),

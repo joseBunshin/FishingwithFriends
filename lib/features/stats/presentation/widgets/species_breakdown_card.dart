@@ -27,8 +27,10 @@ class SpeciesBreakdownCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.donut_large_outlined,
-                    color: AppColors.navy),
+                Icon(
+                  Icons.donut_large_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Species breakdown',

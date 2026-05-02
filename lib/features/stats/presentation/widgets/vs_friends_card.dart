@@ -19,8 +19,10 @@ class VsFriendsCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.emoji_events_outlined,
-                    color: AppColors.navy),
+                Icon(
+                  Icons.emoji_events_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Vs friends',
@@ -145,7 +147,7 @@ class _Bar extends StatelessWidget {
                   Container(
                     height: 14,
                     decoration: BoxDecoration(
-                      color: AppColors.mist,
+                      color: Theme.of(context).colorScheme.outlineVariant,
                       borderRadius: BorderRadius.circular(7),
                     ),
                   ),

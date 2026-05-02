@@ -23,7 +23,10 @@ class ConditionsCorrelationCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.thermostat_outlined, color: AppColors.navy),
+                Icon(
+                  Icons.thermostat_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Conditions correlation',

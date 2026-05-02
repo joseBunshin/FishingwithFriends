@@ -23,9 +23,9 @@ class BadgeWall extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.military_tech_outlined,
-                  color: AppColors.navy,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(

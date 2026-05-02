@@ -1,4 +1,3 @@
-import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
@@ -41,18 +40,22 @@ class _ConditionPill extends StatelessWidget {
         vertical: AppSpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.paper,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppColors.navy),
+          Icon(
+            icon,
+            size: 14,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           const SizedBox(width: AppSpacing.xxs),
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.navy,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
           ),

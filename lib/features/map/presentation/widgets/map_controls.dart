@@ -24,7 +24,7 @@ class MapControls extends StatelessWidget {
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.sm,
       ),
-      color: AppColors.paper,
+      color: Theme.of(context).colorScheme.surface,
       child: Row(
         children: [
           Expanded(
