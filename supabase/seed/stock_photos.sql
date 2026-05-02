@@ -21,26 +21,28 @@
 begin;
 
 -- ---------------------------------------------------------------------------
--- 1. Avatars — direct JPG portraits from randomuser.me. Picked deliberately
--- because the previous pravatar.cc URLs failed to render in Flutter web
--- (they redirect through their CDN with inconsistent CORS headers).
--- randomuser.me serves direct .jpg with `Access-Control-Allow-Origin: *`.
+-- 1. Avatars — ui-avatars.com initials renders. Originally tried
+-- pravatar.cc and randomuser.me; both failed CORS in Flutter web
+-- (no Access-Control-Allow-Origin on the served images).
+-- ui-avatars.com explicitly sends `Access-Control-Allow-Origin: *` and
+-- generates a PNG of initials with our brand colors. Not photo-stock,
+-- but it ships visible avatars without an upload pipeline.
 -- ---------------------------------------------------------------------------
 
 update public.profiles
-set avatar_path = 'https://randomuser.me/api/portraits/women/68.jpg'
+set avatar_path = 'https://ui-avatars.com/api/?name=Alice+R&background=F08948&color=fff&size=300&bold=true&format=png'
 where id = (select id from auth.users where email = 'alice@fwf.test');
 
 update public.profiles
-set avatar_path = 'https://randomuser.me/api/portraits/men/45.jpg'
+set avatar_path = 'https://ui-avatars.com/api/?name=Bob+M&background=102B47&color=fff&size=300&bold=true&format=png'
 where id = (select id from auth.users where email = 'bob@fwf.test');
 
 update public.profiles
-set avatar_path = 'https://randomuser.me/api/portraits/men/22.jpg'
+set avatar_path = 'https://ui-avatars.com/api/?name=Charlie+C&background=4DD9D9&color=102B47&size=300&bold=true&format=png'
 where id = (select id from auth.users where email = 'charlie@fwf.test');
 
 update public.profiles
-set avatar_path = 'https://randomuser.me/api/portraits/men/55.jpg'
+set avatar_path = 'https://ui-avatars.com/api/?name=Jose+D&background=06A77D&color=fff&size=300&bold=true&format=png'
 where id = (select id from auth.users where email = 'jose.diaz@bunshin.io');
 
 -- ---------------------------------------------------------------------------
