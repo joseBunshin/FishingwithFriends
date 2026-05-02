@@ -8,6 +8,12 @@ class CatchDto {
 
   /// Build a `Catch` from a Supabase row (either `catches` or
   /// `catches_friend_view`).
+  ///
+  /// Latitude/longitude are read from the dedicated numeric columns
+  /// added in migration 0016. We fall back to parsing the `location`
+  /// PostGIS column for older rows / responses where Supabase emits
+  /// it as WKT or GeoJSON — but the EWKB hex shape Supabase defaults
+  /// to is unparseable here, which is why 0016 exists.
   static Catch fromRow(Map<String, dynamic> row) {
     return Catch(
       id: row['id'] as String,
@@ -17,8 +23,10 @@ class CatchDto {
       weightKg: _asDouble(row['weight_kg']),
       lengthCm: _asDouble(row['length_cm']),
       caughtAt: DateTime.parse(row['caught_at'] as String).toUtc(),
-      latitude: _latitudeFromLocation(row['location']),
-      longitude: _longitudeFromLocation(row['location']),
+      latitude: _asDouble(row['latitude']) ??
+          _latitudeFromLocation(row['location']),
+      longitude: _asDouble(row['longitude']) ??
+          _longitudeFromLocation(row['location']),
       secretSpot: (row['secret_spot'] as bool?) ?? false,
       catchAndRelease: (row['catch_and_release'] as bool?) ?? false,
       notes: row['notes'] as String?,

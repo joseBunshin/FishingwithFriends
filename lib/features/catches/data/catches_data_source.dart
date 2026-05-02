@@ -26,8 +26,9 @@ class SupabaseCatchesDataSource implements CatchesDataSource {
   static const _ownerColumns = '*';
   static const _friendViewColumns =
       'id, angler_id, species_id, species_label, length_cm, weight_kg, '
-      'caught_at, location, secret_spot, catch_and_release, rig, notes, '
-      'photo_paths, conditions, created_at, updated_at';
+      'caught_at, location, latitude, longitude, secret_spot, '
+      'catch_and_release, rig, notes, photo_paths, conditions, '
+      'created_at, updated_at';
 
   @override
   Future<Map<String, dynamic>> insertCatch(Map<String, dynamic> row) async {
