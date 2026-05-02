@@ -131,10 +131,11 @@ class MeScreen extends ConsumerWidget {
                   onTap: () => context.push('/me/notifications'),
                 ),
                 const Divider(height: 1),
-                const ListTile(
-                  leading: Icon(Icons.settings_outlined),
-                  title: Text('Settings'),
-                  trailing: Icon(Icons.chevron_right),
+                ListTile(
+                  leading: const Icon(Icons.settings_outlined),
+                  title: const Text('Settings'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/me/settings'),
                 ),
                 const Divider(height: 1),
                 ListTile(
