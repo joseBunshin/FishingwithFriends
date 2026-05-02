@@ -44,7 +44,15 @@ class AvatarStorage {
   }
 
   /// Resolve the public URL for a stored path. No network call.
+  ///
+  /// Pass-through for absolute URLs: when [path] already looks like an
+  /// http(s) URL, return it unchanged. Lets dev seed populate avatar_path
+  /// with external stock-photo URLs (pravatar, unsplash) without touching
+  /// the avatars bucket. Real bucket paths still resolve via Supabase.
   String publicUrlFor(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
     return _client.storage.from(bucket).getPublicUrl(path);
   }
 

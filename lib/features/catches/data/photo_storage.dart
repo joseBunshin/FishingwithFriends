@@ -48,6 +48,13 @@ class SupabasePhotoStorage implements PhotoStorage {
 
   @override
   Future<String> signedUrl(String path, {Duration ttl = const Duration(hours: 1)}) {
+    // Pass-through for absolute URLs: when [path] already looks like an
+    // http(s) URL, return it unchanged. Lets dev seed populate photo_paths
+    // with external stock-photo URLs (picsum, unsplash) without touching
+    // the catches bucket. Real bucket paths still mint signed URLs.
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return Future.value(path);
+    }
     return _client.storage.from(bucket).createSignedUrl(path, ttl.inSeconds);
   }
 
