@@ -202,8 +202,13 @@ class _Body extends ConsumerWidget {
         await ref
             .read(tournamentsRepositoryProvider)
             .deleteTournament(tournamentId);
+        // Drop both the list AND the by-id cache for this tournament so
+        // navigating back to /tourneys re-fetches without showing the
+        // ghost row.
+        ref
+          ..invalidate(myTournamentsProvider)
+          ..invalidate(tournamentByIdProvider(tournamentId));
         if (!context.mounted) return;
-        // Pop back to the list — the row is gone.
         context.pop();
       } on AppException catch (e) {
         if (!context.mounted) return;
