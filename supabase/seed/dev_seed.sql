@@ -266,9 +266,43 @@ select
   c.conditions
 from catch_rows c;
 
--- Storytelling trigger (0009) auto-populated personal_records and user_badges
--- from the inserts above. The latlng sync trigger (0016) auto-populated
--- catches.latitude/longitude from the geography column. Nothing else to do.
+-- Storytelling trigger (0009) auto-populated personal_records from the
+-- inserts above (each PR insert reads back the prior row, which sees
+-- incremental state from earlier rows in the same statement). The latlng
+-- sync trigger (0016) auto-populated catches.latitude/longitude from the
+-- geography column.
+--
+-- Badges are a different story: the trigger calls a STABLE helper
+-- (`check_badge_earned`) which sees the entire bulk-insert batch at once,
+-- so single-event predicates like 'first_catch' (count = 1) and
+-- 'first_species' (distinct = 1) never fire on the seed — every angler's
+-- count is already > 1 from the first trigger invocation. Only multi-row
+-- predicates like 'species_slam_in_day' (count >= 3) fire correctly. In
+-- production this is fine because catches log one at a time. For the
+-- seed, manually award the badges that *would* have fired.
+
+insert into public.user_badges (angler_id, badge_code, source_catch_id, earned_at)
+select c.angler_id, 'first_catch', c.id, c.caught_at
+from (
+  select angler_id, id, caught_at,
+         row_number() over (partition by angler_id order by caught_at asc) as rn
+  from public.catches
+  where angler_id in (select id from _seed_users)
+) c
+where c.rn = 1
+on conflict (angler_id, badge_code) do nothing;
+
+insert into public.user_badges (angler_id, badge_code, source_catch_id, earned_at)
+select c.angler_id, 'first_species', c.id, c.caught_at
+from (
+  select angler_id, id, caught_at,
+         row_number() over (partition by angler_id order by caught_at asc) as rn
+  from public.catches
+  where angler_id in (select id from _seed_users)
+    and species_id is not null
+) c
+where c.rn = 1
+on conflict (angler_id, badge_code) do nothing;
 
 -- ----------------------------------------------------------------------------
 -- 6. Trip — one finished trip co-led by Jose with Alice tagged in.
