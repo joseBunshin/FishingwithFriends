@@ -286,9 +286,9 @@ with t as (
   ) returning id
 )
 insert into public.trip_participants (trip_id, angler_id, status)
-select t.id, (select id from _seed_users where alias = 'alice'), 'accepted' from t
+select t.id, (select id from _seed_users where alias = 'alice'), 'accepted'::public.trip_participant_status from t
 union all
-select t.id, (select id from _seed_users where alias = 'bob'),   'invited'  from t;
+select t.id, (select id from _seed_users where alias = 'bob'),   'invited'::public.trip_participant_status  from t;
 
 -- ----------------------------------------------------------------------------
 -- 7. Tournament — "Spring Bass Brawl", live now (started 7d ago, ends 7d out).
@@ -314,15 +314,15 @@ with tourn as (
 -- (Manual insert bypasses the "self-only pending" RLS because we're running as service role here.)
 insert into public.tournament_members (tournament_id, angler_id, status, approved_by, created_at, updated_at)
 select t.id, (select id from _seed_users where alias = 'alice'),
-       'accepted', (select id from _seed_users where alias = 'jose'),
+       'accepted'::public.tournament_member_status, (select id from _seed_users where alias = 'jose'),
        now() - interval '6 days', now() - interval '6 days' from tourn t
 union all
 select t.id, (select id from _seed_users where alias = 'bob'),
-       'accepted', (select id from _seed_users where alias = 'jose'),
+       'accepted'::public.tournament_member_status, (select id from _seed_users where alias = 'jose'),
        now() - interval '6 days', now() - interval '6 days' from tourn t
 union all
 select t.id, (select id from _seed_users where alias = 'charlie'),
-       'accepted', (select id from _seed_users where alias = 'jose'),
+       'accepted'::public.tournament_member_status, (select id from _seed_users where alias = 'jose'),
        now() - interval '5 days', now() - interval '5 days' from tourn t;
 
 -- Side pot: biggest smallmouth bonus.
