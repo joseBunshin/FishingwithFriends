@@ -6,7 +6,7 @@ import 'dart:ui' as ui;
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/share_card.dart';
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,11 +35,17 @@ class ShareCardExporter {
     // and we capture a blank navy panel.
     final photoBytes = photoUrl == null ? null : await _prefetch(photoUrl);
 
+    // Decode bytes synchronously into a ui.Image before building the
+    // offscreen tree. Without this step Image.memory races flushPaint
+    // (the symptom that produced two prior bug-batch attempts at this
+    // bug — the navy panel ships every time on first install).
+    final photoImage = photoBytes == null ? null : await decodeImage(photoBytes);
+
     // Surface a SnackBar when the catch has a photo but it didn't make
     // it into the share card. Don't block the share — let the user
     // ship the card with the navy fallback if they want — but tell
     // them why so they're not confused by "where's my fish?"
-    if (hasPhoto && photoBytes == null && context.mounted) {
+    if (hasPhoto && photoImage == null && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -49,7 +55,14 @@ class ShareCardExporter {
       );
     }
 
-    final bytes = await _capture(catch_, photoUrl, photoBytes);
+    // photoUrl is intentionally null when we have a decoded image — the
+    // offscreen tree must NOT fall through to CachedNetworkImage, which
+    // would re-introduce the race the decode path is meant to eliminate.
+    final bytes = await _capture(
+      catch_,
+      photoImage == null ? photoUrl : null,
+      photoImage,
+    );
     if (bytes == null) return false;
 
     final fileName =
@@ -95,6 +108,69 @@ class ShareCardExporter {
     }
   }
 
+  /// Decode raw photo bytes into a `ui.Image` so `RawImage` can paint
+  /// synchronously inside the offscreen capture pipeline. Returns null
+  /// for any failure mode — the caller surfaces a SnackBar fallback.
+  ///
+  /// Falsification guards (built in deliberately so a future "still
+  /// shipping navy" report has the data needed to skip diagnostic
+  /// guesswork):
+  ///
+  /// 1. **HEIC magic-byte detection.** iOS Photos library returns HEIC
+  ///    bytes for many photos and Flutter's codec cannot decode HEIC.
+  ///    Prior to this batch every fix tried to handle the bytes correctly
+  ///    but assumed they were always JPEG/PNG. Detecting HEIC up front
+  ///    fails fast and surfaces in logs as a distinct cause.
+  /// 2. **Downsample large sources.** `targetWidth` tells the codec to
+  ///    downsample in place, avoiding GPU texture-limit silent-no-op
+  ///    rendering on older iOS devices when source photos exceed 4096
+  ///    pixels on either axis.
+  ///
+  /// `@visibleForTesting` so the share-card-export test suite can verify
+  /// each guard independently with fixture bytes.
+  @visibleForTesting
+  Future<ui.Image?> decodeImage(Uint8List bytes) async {
+    if (bytes.isEmpty) {
+      debugPrint('share-card decode: empty bytes; cannot decode');
+      return null;
+    }
+    // HEIC files use the ISO BMFF container with brand 'heic', 'heix',
+    // 'hevc', or 'mif1' at bytes 8-11 (after the 4-byte size + 'ftyp'
+    // FourCC at bytes 4-7). If we see any of those, the codec will
+    // fail — fail fast with a typed log line instead.
+    if (bytes.length >= 12) {
+      final ftyp = String.fromCharCodes(bytes.sublist(4, 8));
+      final brand = String.fromCharCodes(bytes.sublist(8, 12));
+      if (ftyp == 'ftyp' &&
+          (brand == 'heic' ||
+              brand == 'heix' ||
+              brand == 'hevc' ||
+              brand == 'mif1')) {
+        debugPrint(
+          'share-card decode: HEIC bytes detected '
+          '(brand=$brand, len=${bytes.length}); flutter codec cannot decode',
+        );
+        return null;
+      }
+    }
+    try {
+      final codec = await ui.instantiateImageCodec(
+        bytes,
+        targetWidth: 1080,
+      );
+      final frame = await codec.getNextFrame();
+      debugPrint(
+        'share-card decode: ok '
+        '(sourceLen=${bytes.length}, '
+        'decoded=${frame.image.width}x${frame.image.height})',
+      );
+      return frame.image;
+    } on Object catch (e) {
+      debugPrint('share-card decode: failed (${e.runtimeType}): $e');
+      return null;
+    }
+  }
+
   Future<Uint8List?> _prefetch(String url) async {
     // Direct http.get with an explicit timeout. The previous
     // NetworkAssetBundle implementation swallowed errors silently and
@@ -123,7 +199,7 @@ class ShareCardExporter {
   Future<Uint8List?> _capture(
     Catch catch_,
     String? photoUrl,
-    Uint8List? photoBytes,
+    ui.Image? photoImage,
   ) async {
     final repaint = RenderRepaintBoundary();
     final pipelineOwner = PipelineOwner();
@@ -153,7 +229,7 @@ class ShareCardExporter {
         child: ShareCard(
           catch_: catch_,
           photoUrl: photoUrl,
-          photoBytes: photoBytes,
+          photoImage: photoImage,
         ),
       ),
     ).attachToRenderTree(buildOwner);
