@@ -5,7 +5,7 @@ One-time backend bootstrap for Fishing with Friends.
 ## 1. Create the project
 
 1. Sign in at https://supabase.com/dashboard.
-2. Create a new project under the Bunshin Studios org. Region: closest to your primary user base.
+2. Create a new project under the Bunshin Development Studios org. Region: closest to your primary user base.
 3. Save the project URL and `anon` key into `.env`:
    ```
    SUPABASE_URL=https://<ref>.supabase.co

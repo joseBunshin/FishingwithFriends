@@ -3,7 +3,7 @@
 **Last updated:** 2 May 2026
 **Effective:** 2 May 2026
 
-Bunshin Studios LLC ("Bunshin Studios", "we", "us", "our") operates the **Fishing with Friends** mobile application (the "App"). This Privacy Policy explains what information we collect, why we collect it, how we use it, and the choices you have.
+Bunshin Development Studios LLC ("Bunshin Development Studios", "we", "us", "our") operates the **Fishing with Friends** mobile application (the "App"). This Privacy Policy explains what information we collect, why we collect it, how we use it, and the choices you have.
 
 If you do not agree with this Policy, please do not use the App.
 
@@ -13,7 +13,7 @@ If you do not agree with this Policy, please do not use the App.
 
 | | |
 |---|---|
-| Controller | Bunshin Studios LLC |
+| Controller | Bunshin Development Studios LLC |
 | Contact | jose.diaz@bunshin.io |
 | App | Fishing with Friends (iOS, Android) |
 | Website | https://bunshin.io |
@@ -107,7 +107,7 @@ We do not share your information with any party not listed above, except as requ
 
 ## 6. International transfers
 
-Bunshin Studios is based in the United States. By using the App, you understand that your information may be processed in the United States and other countries where our service providers operate. Where required by law, we rely on appropriate transfer mechanisms (e.g. Standard Contractual Clauses).
+Bunshin Development Studios is based in the United States. By using the App, you understand that your information may be processed in the United States and other countries where our service providers operate. Where required by law, we rely on appropriate transfer mechanisms (e.g. Standard Contractual Clauses).
 
 ---
 
@@ -181,7 +181,7 @@ We may disclose your information when we believe in good faith that disclosure i
 
 - Comply with a valid legal process (subpoena, court order, regulatory demand).
 - Enforce our Terms of Service.
-- Protect the safety, rights, or property of users, the public, or Bunshin Studios.
+- Protect the safety, rights, or property of users, the public, or Bunshin Development Studios.
 - Investigate fraud, abuse, or security incidents.
 
 ---
@@ -202,7 +202,7 @@ Continued use of the App after a change means you accept the updated Policy.
 
 Questions, requests, or complaints?
 
-**Bunshin Studios LLC**
+**Bunshin Development Studios LLC**
 Email: **jose.diaz@bunshin.io**
 
 ---

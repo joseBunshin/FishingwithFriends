@@ -8,7 +8,7 @@ Unlike iOS, Android builds work on any platform with Flutter installed (Windows,
 
 ## 1. One-time signing keystore
 
-Run **once**, ever, for Bunshin Studios. The resulting `.jks` is the irreplaceable identity for the app — losing it means you lose the ability to push updates and have to publish under a new package name.
+Run **once**, ever, for Bunshin Development Studios. The resulting `.jks` is the irreplaceable identity for the app — losing it means you lose the ability to push updates and have to publish under a new package name.
 
 ```bash
 keytool -genkey -v \
@@ -20,7 +20,7 @@ keytool -genkey -v \
 Prompts for:
 - Keystore password (use a password manager — back this up)
 - Key password (same is fine)
-- Distinguished name fields (CN=Jose Diaz, OU=Bunshin Studios, O=Bunshin Studios, L=Charlotte, ST=NC, C=US — adjust to taste)
+- Distinguished name fields (CN=Jose Diaz, OU=Bunshin Development Studios, O=Bunshin Development Studios, L=Charlotte, ST=NC, C=US — adjust to taste)
 
 Copy the resulting file to a secure location AND drop a working copy at `android/app/upload-keystore.jks` (gitignored).
 

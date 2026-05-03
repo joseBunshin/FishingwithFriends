@@ -2,7 +2,7 @@
 
 Social angling app for iOS and Android — catch logging, friend feeds, and competitive tournaments. Migration of the Lovable web prototype into a production Flutter + Supabase app.
 
-> Bunshin Studios © 2026 · Spec v1.0
+> Bunshin Development Studios © 2026 · Spec v1.0
 
 ## Stack
 
@@ -158,4 +158,4 @@ Use the project's Compound Engineering skills:
 
 ## License
 
-Proprietary — Bunshin Studios © 2026.
+Proprietary — Bunshin Development Studios © 2026.

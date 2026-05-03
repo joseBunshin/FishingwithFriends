@@ -27,7 +27,7 @@ These have to happen **once per target platform** before first submission. Subse
 
 ### Both platforms
 
-- [ ] **Privacy policy URL** — Apple and Google both require a publicly hosted policy. Bunshin Studios needs to host one (e.g. `https://bunshin.io/privacy/fishing-with-friends`). Cover: Supabase Auth, Supabase Storage (avatar + catch photos), location data, FCM push tokens, conditions enrichment via Open-Meteo.
+- [ ] **Privacy policy URL** — Apple and Google both require a publicly hosted policy. Bunshin Development Studios needs to host one (e.g. `https://bunshin.io/privacy/fishing-with-friends`). Cover: Supabase Auth, Supabase Storage (avatar + catch photos), location data, FCM push tokens, conditions enrichment via Open-Meteo.
 - [ ] **Support / contact email** — `jose.diaz@bunshin.io` already used in app's Settings → About; same address works for store listings.
 - [ ] **Marketing icon (1024×1024 PNG, no transparency)** — `assets/icon/app_icon.png` exists; verify it's flat-no-alpha for both stores.
 - [ ] **Screenshots** — at least 2 hero screenshots per device class. Capture on device or via simulators with the dev seed populated.
@@ -36,7 +36,7 @@ These have to happen **once per target platform** before first submission. Subse
 
 ### iOS-only
 
-- [ ] **Apple Developer Program membership** — Bunshin Studios LLC enrolled ($99/year).
+- [ ] **Apple Developer Program membership** — Bunshin Development Studios LLC enrolled ($99/year).
 - [ ] **App Store Connect record created** with bundle ID `com.bunshin.fishingWithFriends`.
 - [ ] **Distribution certificate + provisioning profile** generated in Apple Developer portal.
 - [ ] **APNs key uploaded to Firebase** (push notifications) — APNs Auth Key (`.p8` file) tied to the Bunshin team.
@@ -45,7 +45,7 @@ These have to happen **once per target platform** before first submission. Subse
 
 ### Android-only
 
-- [ ] **Google Play Console account** — Bunshin Studios developer account ($25 one-time).
+- [ ] **Google Play Console account** — Bunshin Development Studios developer account ($25 one-time).
 - [ ] **App signing keystore** — `android/key.properties` + `android/app/upload-keystore.jks` (both gitignored). Generate with `keytool -genkey -v -keystore ...`. Back the `.jks` up to a secure place — losing it means losing the ability to push updates.
 - [ ] **Play Integrity API** — enabled on the Google Cloud project for the app, used by Firebase for app verification.
 - [ ] **Data safety form** — Play Console equivalent of Apple's privacy nutrition labels.

@@ -8,7 +8,7 @@ Builds **must** run on a Mac with Xcode 15+. Windows/Linux can do everything exc
 
 ## 0. Accounts & identity (one-time)
 
-- [ ] Apple Developer Program — Bunshin Studios LLC enrolled, $99/yr active
+- [ ] Apple Developer Program — Bunshin Development Studios LLC enrolled, $99/yr active
 - [ ] App Store Connect record created with bundle ID `com.bunshin.fishingWithFriends`
 - [ ] App name reserved: **Fishing with Friends**
 - [ ] Primary category: **Sports** · Secondary: **Social Networking**
@@ -58,7 +58,7 @@ Builds **must** run on a Mac with Xcode 15+. Windows/Linux can do everything exc
 - [ ] `flutter pub get` clean
 - [ ] `cd ios && pod install` clean (run `pod repo update && pod install --repo-update` if outdated)
 - [ ] Open `ios/Runner.xcworkspace` (NOT the `.xcodeproj`)
-- [ ] Xcode → Signing & Capabilities → **Team = Bunshin Studios**, automatic signing on
+- [ ] Xcode → Signing & Capabilities → **Team = Bunshin Development Studios**, automatic signing on
 - [ ] Capability **Push Notifications** enabled
 - [ ] Capability **Background Modes → Remote notifications** enabled
 - [ ] Build target → iOS 13.0+ (matches `Podfile`)
@@ -113,7 +113,7 @@ In App Store Connect → app → App Store tab, version 1.0.0:
 - [ ] App preview video (optional — defer to v1.1)
 - [ ] App Privacy nutrition label completed (data types + usage purpose for each)
 - [ ] Age rating questionnaire filled (no objectionable content)
-- [ ] Copyright: `© 2026 Bunshin Studios LLC`
+- [ ] Copyright: `© 2026 Bunshin Development Studios LLC`
 - [ ] Build selected from TestFlight → Builds dropdown
 - [ ] Release option chosen: **Manual** (recommended for v1) or **Automatic on approval**
 

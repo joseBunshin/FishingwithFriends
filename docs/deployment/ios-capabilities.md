@@ -152,7 +152,7 @@ App Store Connect → App Privacy → start the form. Declare each data type onc
 | Primary category | **Sports** |
 | Secondary category | **Social Networking** |
 | Age rating | **4+** |
-| Copyright | `© 2026 Bunshin Studios LLC` |
+| Copyright | `© 2026 Bunshin Development Studios LLC` |
 | Support URL | https://bunshin.io/support (or the Bunshin homepage) |
 | Marketing URL | Same |
 | Privacy Policy URL | https://bunshin.io/privacy/fishing-with-friends |

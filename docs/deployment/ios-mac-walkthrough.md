@@ -16,7 +16,7 @@ If something differs between this doc and the others, **this doc wins** for the 
 You'll need:
 
 - **A Mac** running macOS 14 (Sonoma) or 15 (Sequoia). Apple Silicon recommended (Intel works but slower).
-- **Apple ID** for the Bunshin Studios account.
+- **Apple ID** for the Bunshin Development Studios account.
 - **Apple Developer Program enrollment** ($99/yr, on the Bunshin Apple ID).
 - **App Store Connect access** for that same Apple ID, with the FWF app record created and bundle id `com.bunshin.fishingWithFriends` reserved.
 - **A real iPhone** (running iOS 16+) for end-to-end TestFlight testing.
@@ -85,7 +85,7 @@ You don't need a green Android setup to ship to iOS, but Flutter complains if it
 
 ### 1.3 Sign in to Xcode with the Bunshin Apple ID
 
-Xcode → Settings → Accounts → **+** → Apple ID → enter Bunshin credentials. Make sure the team **Bunshin Studios LLC** appears under "Team" in the right pane.
+Xcode → Settings → Accounts → **+** → Apple ID → enter Bunshin credentials. Make sure the team **Bunshin Development Studios LLC** appears under "Team" in the right pane.
 
 ---
 
@@ -168,7 +168,7 @@ Click the **Signing & Capabilities** tab.
 
 - Select the `Runner` target (left side of the editor pane).
 - **Automatically manage signing** → checked.
-- **Team** → select **Bunshin Studios LLC**.
+- **Team** → select **Bunshin Development Studios LLC**.
 - **Bundle Identifier** → must be exactly `com.bunshin.fishingWithFriends`.
 
 Xcode will auto-create a development provisioning profile. If you see a red banner like "Failed to register a bundle identifier", click **Try Again** — sometimes Apple's portal lags.
@@ -410,7 +410,7 @@ App Store Connect → your app → **App Store** tab → version **1.0 Prepare f
 | **Privacy Policy URL** | https://bunshin.io/privacy/fishing-with-friends |
 | **Primary category** | Sports |
 | **Secondary category** | Social Networking |
-| **Copyright** | © 2026 Bunshin Studios LLC |
+| **Copyright** | © 2026 Bunshin Development Studios LLC |
 | **Age Rating** | 4+ (questionnaire — answer "None" to everything) |
 
 ### 13.2 Screenshots

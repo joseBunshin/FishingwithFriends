@@ -70,7 +70,7 @@ class SettingsScreen extends ConsumerWidget {
           const _Section(title: 'About'),
           const ListTile(
             title: Text('Fishing with Friends'),
-            subtitle: Text('v1.0.0 · Bunshin Studios'),
+            subtitle: Text('v1.0.0 · Bunshin Development Studios'),
           ),
           const ListTile(
             leading: Icon(Icons.lock_outline),

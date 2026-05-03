@@ -5,7 +5,7 @@ placeholder asset paths with finals before submission. Keep this in sync
 when the product evolves — the version of this doc that ships is the one
 that gets reviewed.
 
-**Publisher:** Bunshin Studios
+**Publisher:** Bunshin Development Studios
 **Bundle ID / Application ID:** `com.bunshin.fishing_with_friends`
 **Primary category:** Sports
 **Secondary category (App Store):** Lifestyle
@@ -57,7 +57,7 @@ that gets reviewed.
 > • Offline-first — log catches without signal, sync when you're back
 > • Light + dark themes, lb/kg + in/cm toggles
 >
-> Built by Bunshin Studios. Freshwater + saltwater. iOS + Android.
+> Built by Bunshin Development Studios. Freshwater + saltwater. iOS + Android.
 
 ---
 
