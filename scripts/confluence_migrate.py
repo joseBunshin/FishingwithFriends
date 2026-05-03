@@ -296,6 +296,11 @@ def main():
     )
     page_from_md(
         deploy_id,
+        "iOS — Mac/Xcode walkthrough to TestFlight + App Store",
+        deploy_dir / "ios-mac-walkthrough.md",
+    )
+    page_from_md(
+        deploy_id,
         "Android — Google Play deployment",
         deploy_dir / "android.md",
     )
