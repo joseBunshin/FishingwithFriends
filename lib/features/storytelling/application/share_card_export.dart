@@ -6,11 +6,11 @@ import 'dart:ui' as ui;
 import 'package:fishing_with_friends/features/catches/data/catches_repository_provider.dart';
 import 'package:fishing_with_friends/features/catches/domain/catch.dart';
 import 'package:fishing_with_friends/features/storytelling/presentation/widgets/share_card.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart' show NetworkAssetBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -76,14 +76,26 @@ class ShareCardExporter {
   }
 
   Future<Uint8List?> _prefetch(String url) async {
-    // NetworkAssetBundle works on web AND mobile — it's just an HTTP
-    // GET behind ByteData. Avoids `dart:io.File` which doesn't exist on
-    // web, and avoids depending on flutter_cache_manager just for this.
+    // Direct http.get with an explicit timeout. The previous
+    // NetworkAssetBundle implementation swallowed errors silently and
+    // was the root cause of the share card's "always navy" symptom on
+    // first TestFlight install — when prefetch failed, the offscreen
+    // capture raced against the async CachedNetworkImage and won every
+    // time. Logging failures via debugPrint keeps the next breakage
+    // visible instead of silent.
     try {
-      final bundle = NetworkAssetBundle(Uri.parse(url));
-      final byteData = await bundle.load('');
-      return byteData.buffer.asUint8List();
-    } on Exception {
+      final res = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 8));
+      if (res.statusCode != 200) {
+        debugPrint(
+          'share-card prefetch returned ${res.statusCode} for $url',
+        );
+        return null;
+      }
+      return res.bodyBytes;
+    } on Object catch (e) {
+      debugPrint('share-card prefetch failed for $url: $e');
       return null;
     }
   }

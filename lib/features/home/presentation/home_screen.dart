@@ -39,7 +39,13 @@ class HomeScreen extends ConsumerWidget {
         },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            // Bottom-nav clearance (extendBody:true on the shell scaffold).
+            88 + MediaQuery.viewPaddingOf(context).bottom,
+          ),
           children: [
             const HomeActionChips(),
             const SizedBox(height: AppSpacing.xl),
