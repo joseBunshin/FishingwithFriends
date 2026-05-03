@@ -226,7 +226,19 @@ class _SearchResults extends ConsumerWidget {
         if (results.isEmpty) return const SizedBox.shrink();
         return Padding(
           padding: const EdgeInsets.only(top: AppSpacing.md),
+          // crossAxisAlignment.stretch is load-bearing: without it, the
+          // Column defaults to CrossAxisAlignment.center, which gives
+          // each child its intrinsic width. _AnglerRow's inner Row has
+          // an Expanded child — under unbounded width it collapses to
+          // its minimum intrinsic width (one character per line), with
+          // the avatar and trailing button squeezed off. This is the
+          // bug-3 batch's bug 2 root cause: search-result rows looked
+          // "vertical" with no avatar at iPhone SE width.
+          // _PendingRow and _FriendRow render directly in the outer
+          // ListView (which provides bounded cross-axis), so they
+          // never hit this — only _SearchResultRow did.
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final p in results)
                 _SearchResultRow(profile: p, bundle: bundle),
