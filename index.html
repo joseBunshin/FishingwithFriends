@@ -309,46 +309,115 @@
       });
     }
 
-    // Supabase appends auth context to the URL fragment after a token
-    // verify. Show the right card based on the type.
-    //   #access_token=...&type=signup       (signup confirmation)
-    //   #access_token=...&type=recovery     (password reset)
-    //   #error=...&error_code=...           (expired / invalid link)
+    // Supabase appends auth context to the URL after a token verify.
+    // Two flow shapes the project might be configured for:
+    //   PKCE (default for new projects): ?code=XYZ in query string.
+    //                                    We exchange via auth.exchangeCodeForSession.
+    //   Implicit: #access_token=...&type=recovery in URL fragment.
+    //                                    Auto-detected via detectSessionInUrl.
+    //   Errors:   ?error=...&error_code=... (or in fragment)
     (function () {
       var hash = window.location.hash.substring(1);
-      var search = window.location.search.substring(1);
-      var params = new URLSearchParams(hash || search);
-      var type = params.get('type');
-      var error = params.get('error') || params.get('error_code');
+      var queryParams = new URLSearchParams(window.location.search);
+      var hashParams = new URLSearchParams(hash);
 
+      var error =
+        queryParams.get('error') ||
+        queryParams.get('error_code') ||
+        hashParams.get('error') ||
+        hashParams.get('error_code');
       if (error) {
         showCard('card-error');
         return;
       }
-      if (type === 'signup' || type === 'email_change') {
+
+      // PKCE path: code=XYZ in query string. The code is single-use, so
+      // exchange it once on page load and surface the form/error from
+      // that result.
+      var pkceCode = queryParams.get('code');
+      if (pkceCode) {
+        showCard('card-recovery');
+        wireResetFormPkce(pkceCode);
+        return;
+      }
+
+      // Implicit path: tokens in fragment with explicit type.
+      var implicitType = hashParams.get('type');
+      if (implicitType === 'signup' || implicitType === 'email_change') {
         showCard('card-confirmed');
         return;
       }
-      if (type === 'recovery' || type === 'magiclink') {
+      if (implicitType === 'recovery' || implicitType === 'magiclink') {
         showCard('card-recovery');
-        wireResetForm();
+        wireResetFormImplicit();
         return;
       }
       // No auth context — show the default landing.
     })();
 
-    function wireResetForm() {
-      var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    function makeClient() {
+      return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
-          // Default true, but be explicit — this is the line that
-          // reads access_token + refresh_token out of the URL hash
-          // and restores the recovery session so updateUser can run.
-          detectSessionInUrl: true,
+          // We only need the recovery session alive long enough to call
+          // updateUser once. Don't pollute storage or refresh tokens.
+          detectSessionInUrl: false,
           autoRefreshToken: false,
           persistSession: false,
+          flowType: 'pkce',
         },
       });
+    }
 
+    // PKCE: exchange the one-time code for a recovery session up-front,
+    // then show the form. If exchange fails (expired / consumed link),
+    // show the error card immediately rather than after a wasted form
+    // submit.
+    function wireResetFormPkce(code) {
+      var sb = makeClient();
+      // Strip ?code= from the URL so a refresh doesn't try to redeem
+      // the now-consumed code and surface a confusing error.
+      history.replaceState(null, '', window.location.pathname);
+
+      sb.auth.exchangeCodeForSession(code).then(function (res) {
+        if (res.error) {
+          showCard('card-error');
+          return;
+        }
+        attachSubmitHandler(sb);
+      }).catch(function () {
+        showCard('card-error');
+      });
+    }
+
+    // Implicit: Supabase JS reads the access_token out of the fragment
+    // when detectSessionInUrl is true. Because we set it false above
+    // (PKCE is the modern default), call setSession explicitly here.
+    function wireResetFormImplicit() {
+      var sb = makeClient();
+      var hashParams = new URLSearchParams(window.location.hash.substring(1));
+      var accessToken = hashParams.get('access_token');
+      var refreshToken = hashParams.get('refresh_token');
+      if (!accessToken || !refreshToken) {
+        showCard('card-error');
+        return;
+      }
+      // Strip the fragment so a refresh doesn't re-process tokens.
+      history.replaceState(null, '', window.location.pathname);
+      sb.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      }).then(function (res) {
+        if (res.error) {
+          showCard('card-error');
+          return;
+        }
+        attachSubmitHandler(sb);
+      }).catch(function () {
+        showCard('card-error');
+      });
+    }
+
+    function attachSubmitHandler(sb) {
       var form = document.getElementById('reset-form');
       var pwInput = document.getElementById('new-password');
       var confirmInput = document.getElementById('confirm-password');
@@ -387,9 +456,6 @@
             showError(res.error.message || 'Could not update password.');
             return;
           }
-          // Clear the hash so refreshing the page doesn't re-trigger
-          // the recovery flow with a now-consumed token.
-          history.replaceState(null, '', window.location.pathname);
           showCard('card-reset-success');
         }).catch(function (err) {
           submit.disabled = false;
