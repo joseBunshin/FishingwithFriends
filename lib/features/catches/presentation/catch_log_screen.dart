@@ -164,8 +164,9 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
     }
 
     final controller = ref.read(saveCatchControllerProvider.notifier);
-    if (ref.read(saveCatchControllerProvider).isLoading)
+    if (ref.read(saveCatchControllerProvider).isLoading) {
       return; // double-tap guard
+    }
 
     final saved = await controller.submit(_buildInput());
     if (!mounted) return;
