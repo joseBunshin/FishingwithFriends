@@ -63,7 +63,11 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       body: child,
-      extendBody: true,
+      // extendBody:false stops content from scrolling under the nav bar.
+      // The raised Log button still pokes above into the body via the
+      // inner Stack's clipBehavior:Clip.none, so the visual identity is
+      // preserved while screens no longer need per-device padding shims.
+      extendBody: false,
       bottomNavigationBar: SafeArea(
         top: false,
         child: SizedBox(
@@ -157,15 +161,19 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(selected ? tab.activeIcon : tab.icon, size: 24, color: color),
             const SizedBox(height: 2),
-            Text(
-              tab.label,
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.fade,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
-                color: color,
+            // FittedBox(scaleDown) preserves all characters at narrow
+            // widths (iPhone SE/375pt) by shrinking the label rather
+            // than truncating it. Earlier softWrap:false + fade approach
+            // dropped the trailing 's' in "Tourneys".
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                tab.label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                  color: color,
+                ),
               ),
             ),
           ],

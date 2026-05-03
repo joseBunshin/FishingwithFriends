@@ -222,10 +222,7 @@ class MeScreen extends ConsumerWidget {
               ),
             ),
           ),
-          // Bottom-nav clearance — the AppShell uses extendBody:true so
-          // content scrolls under the 72pt nav bar. Without this the
-          // Sign-out tile gets obscured.
-          SizedBox(height: 88 + MediaQuery.viewPaddingOf(context).bottom),
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );
