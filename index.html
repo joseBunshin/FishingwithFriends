@@ -125,6 +125,51 @@
     footer a:hover { color: var(--orange); }
     .hidden { display: none !important; }
     .success-icon { color: var(--success); }
+    .field-label {
+      display: block;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 16px 0 6px;
+      letter-spacing: 0.2px;
+    }
+    #reset-form input[type="password"] {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border: 1px solid var(--mist);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink);
+      font-family: inherit;
+      transition: border-color 0.15s ease;
+    }
+    #reset-form input[type="password"]:focus {
+      outline: none;
+      border-color: var(--orange);
+    }
+    .cta-block {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .cta-block[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .form-error {
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      background: #FEE2E2;
+      color: #991B1B;
+      border-radius: 8px;
+      font-size: 13px;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
@@ -168,13 +213,45 @@
         <div class="badge" style="color:var(--orange);">🔐</div>
         <h1>Reset your password</h1>
         <p>
-          To finish resetting your password, open <strong>Fishing with
-          Friends</strong> on your phone. The app will detect your
-          recovery session and prompt you for a new password.
+          Pick a new password for your Fishing with Friends account.
+          You'll use it the next time you sign in on the app.
         </p>
-        <p style="font-size:13px;margin-top:24px;color:#718096;">
-          If you didn't request this reset, you can safely ignore — your
-          account stays as it was.
+        <form id="reset-form" autocomplete="off" novalidate>
+          <label class="field-label" for="new-password">New password</label>
+          <input
+            id="new-password"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+            placeholder="At least 8 characters"
+          />
+          <label class="field-label" for="confirm-password">Confirm password</label>
+          <input
+            id="confirm-password"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+            placeholder="Type it again"
+          />
+          <p id="reset-error" class="form-error hidden"></p>
+          <button id="reset-submit" type="submit" class="cta cta-block">
+            Update password
+          </button>
+        </form>
+        <div class="meta">
+          <a href="./privacy-policy.html">Privacy policy</a> ·
+          <a href="mailto:jose.diaz@bunshin.io">Contact</a>
+        </div>
+      </div>
+
+      <div id="card-reset-success" class="hidden">
+        <div class="badge success-icon">✓</div>
+        <h1>Password updated</h1>
+        <p>
+          You're all set. Open Fishing with Friends on your phone and
+          sign in with your new password.
         </p>
         <div class="meta">
           <a href="./privacy-policy.html">Privacy policy</a> ·
@@ -207,7 +284,31 @@
     <a href="./privacy-policy.html">Privacy</a>
   </footer>
 
+  <!--
+    Supabase JS SDK — used only on the recovery card to call
+    auth.updateUser({ password }) with the recovery session that
+    Supabase auto-restores from the URL fragment. Anon key is safe
+    to expose; that's its design.
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
+    var SUPABASE_URL = 'https://zragtwqxezkxbtwvriwg.supabase.co';
+    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpyYWd0d3F4ZXpreGJ0d3ZyaXdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2NDU5NTQsImV4cCI6MjA5MzIyMTk1NH0.Web2i1pXhhn9Sk1e17efgrHfZQBaXa6lRVeKqzJLhmM';
+
+    function showCard(id) {
+      var cards = [
+        'card-default',
+        'card-confirmed',
+        'card-recovery',
+        'card-reset-success',
+        'card-error'
+      ];
+      cards.forEach(function (cardId) {
+        var el = document.getElementById(cardId);
+        if (el) el.classList.toggle('hidden', cardId !== id);
+      });
+    }
+
     // Supabase appends auth context to the URL fragment after a token
     // verify. Show the right card based on the type.
     //   #access_token=...&type=signup       (signup confirmation)
@@ -230,16 +331,71 @@
       }
       if (type === 'recovery' || type === 'magiclink') {
         showCard('card-recovery');
+        wireResetForm();
         return;
       }
       // No auth context — show the default landing.
     })();
 
-    function showCard(id) {
-      var cards = ['card-default', 'card-confirmed', 'card-recovery', 'card-error'];
-      cards.forEach(function (cardId) {
-        var el = document.getElementById(cardId);
-        if (el) el.classList.toggle('hidden', cardId !== id);
+    function wireResetForm() {
+      var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          // Default true, but be explicit — this is the line that
+          // reads access_token + refresh_token out of the URL hash
+          // and restores the recovery session so updateUser can run.
+          detectSessionInUrl: true,
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      });
+
+      var form = document.getElementById('reset-form');
+      var pwInput = document.getElementById('new-password');
+      var confirmInput = document.getElementById('confirm-password');
+      var errorEl = document.getElementById('reset-error');
+      var submit = document.getElementById('reset-submit');
+
+      function showError(msg) {
+        errorEl.textContent = msg;
+        errorEl.classList.remove('hidden');
+      }
+      function clearError() {
+        errorEl.textContent = '';
+        errorEl.classList.add('hidden');
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearError();
+        var pw = pwInput.value;
+        var confirm = confirmInput.value;
+        if (pw.length < 8) {
+          showError('Password must be at least 8 characters.');
+          return;
+        }
+        if (pw !== confirm) {
+          showError("Passwords don't match.");
+          return;
+        }
+        submit.disabled = true;
+        submit.textContent = 'Updating…';
+
+        sb.auth.updateUser({ password: pw }).then(function (res) {
+          submit.disabled = false;
+          submit.textContent = 'Update password';
+          if (res.error) {
+            showError(res.error.message || 'Could not update password.');
+            return;
+          }
+          // Clear the hash so refreshing the page doesn't re-trigger
+          // the recovery flow with a now-consumed token.
+          history.replaceState(null, '', window.location.pathname);
+          showCard('card-reset-success');
+        }).catch(function (err) {
+          submit.disabled = false;
+          submit.textContent = 'Update password';
+          showError((err && err.message) || 'Network error. Try again.');
+        });
       });
     }
   </script>
