@@ -26,8 +26,7 @@ class NotificationsScreen extends ConsumerWidget {
           IconButton(
             tooltip: 'Notification preferences',
             icon: const Icon(Icons.tune),
-            onPressed: () =>
-                context.push('/me/notifications/preferences'),
+            onPressed: () => context.push('/me/notifications/preferences'),
           ),
           if (unread > 0)
             TextButton(
@@ -41,9 +40,9 @@ class NotificationsScreen extends ConsumerWidget {
                   ref.invalidate(myNotificationsProvider);
                 } on AppException catch (e) {
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.message)),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(e.message)));
                 }
               },
               child: const Text('Mark all read'),
@@ -53,8 +52,7 @@ class NotificationsScreen extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(myNotificationsProvider),
         child: asyncNotifs.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => _ErrorView(message: '$e'),
           data: (list) {
             if (list.isEmpty) return const _Empty();
@@ -81,60 +79,86 @@ class _NotificationTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isRead = notification.isRead;
     final scheme = Theme.of(context).colorScheme;
-    return ListTile(
-      onTap: () async {
-        // Mark read in the background; navigate immediately.
-        if (!isRead) {
-          unawaited(
-            ref
-                .read(notificationsRepositoryProvider)
-                .markRead(notification.id)
-                .then((_) => ref.invalidate(myNotificationsProvider)),
-          );
-        }
-        final path = notification.deeplinkPath;
-        if (path != null && context.mounted) {
-          unawaited(context.push(path));
+    return Dismissible(
+      key: ValueKey('notif-${notification.id}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        color: scheme.error,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
+        child: Icon(Icons.delete_outline, color: scheme.onError),
+      ),
+      onDismissed: (_) async {
+        try {
+          await ref
+              .read(notificationsRepositoryProvider)
+              .delete(notification.id);
+          ref.invalidate(myNotificationsProvider);
+        } on AppException catch (e) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.message)));
+          // Re-fetch so the dismissed-locally row reappears since the
+          // delete didn't actually land.
+          ref.invalidate(myNotificationsProvider);
         }
       },
-      leading: CircleAvatar(
-        backgroundColor: isRead
-            ? scheme.surfaceContainerHighest
-            : AppColors.orange.withValues(alpha: 0.15),
-        child: Icon(
-          _iconFor(notification.kind),
-          color: isRead ? scheme.onSurfaceVariant : AppColors.orange,
-          size: 20,
+      child: ListTile(
+        onTap: () async {
+          // Mark read in the background; navigate immediately.
+          if (!isRead) {
+            unawaited(
+              ref
+                  .read(notificationsRepositoryProvider)
+                  .markRead(notification.id)
+                  .then((_) => ref.invalidate(myNotificationsProvider)),
+            );
+          }
+          final path = notification.deeplinkPath;
+          if (path != null && context.mounted) {
+            unawaited(context.push(path));
+          }
+        },
+        leading: CircleAvatar(
+          backgroundColor: isRead
+              ? scheme.surfaceContainerHighest
+              : AppColors.orange.withValues(alpha: 0.15),
+          child: Icon(
+            _iconFor(notification.kind),
+            color: isRead ? scheme.onSurfaceVariant : AppColors.orange,
+            size: 20,
+          ),
         ),
-      ),
-      title: Text(
-        notification.title,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
-            ),
-      ),
-      subtitle: notification.body == null
-          ? Text(_relative(notification.createdAt))
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(notification.body!),
-                Text(
-                  _relative(notification.createdAt),
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-              ],
-            ),
-      trailing: isRead
-          ? null
-          : Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: AppColors.orange,
-                shape: BoxShape.circle,
+        title: Text(
+          notification.title,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
+          ),
+        ),
+        subtitle: notification.body == null
+            ? Text(_relative(notification.createdAt))
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(notification.body!),
+                  Text(
+                    _relative(notification.createdAt),
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ],
               ),
-            ),
+        trailing: isRead
+            ? null
+            : Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.orange,
+                  shape: BoxShape.circle,
+                ),
+              ),
+      ),
     );
   }
 }
@@ -204,15 +228,15 @@ class _ErrorView extends StatelessWidget {
 }
 
 IconData _iconFor(NotificationKind kind) => switch (kind) {
-      NotificationKind.friendRequest => Icons.person_add_alt,
-      NotificationKind.friendAccepted => Icons.handshake_outlined,
-      NotificationKind.tournamentInvite => Icons.emoji_events_outlined,
-      NotificationKind.tournamentMemberApproved => Icons.check_circle_outline,
-      NotificationKind.tournamentMemberRejected => Icons.cancel_outlined,
-      NotificationKind.tournamentEntryApproved => Icons.verified_outlined,
-      NotificationKind.tournamentEntryRejected => Icons.block_outlined,
-      NotificationKind.system => Icons.info_outline,
-    };
+  NotificationKind.friendRequest => Icons.person_add_alt,
+  NotificationKind.friendAccepted => Icons.handshake_outlined,
+  NotificationKind.tournamentInvite => Icons.emoji_events_outlined,
+  NotificationKind.tournamentMemberApproved => Icons.check_circle_outline,
+  NotificationKind.tournamentMemberRejected => Icons.cancel_outlined,
+  NotificationKind.tournamentEntryApproved => Icons.verified_outlined,
+  NotificationKind.tournamentEntryRejected => Icons.block_outlined,
+  NotificationKind.system => Icons.info_outline,
+};
 
 String _relative(DateTime ts) {
   final now = DateTime.now();

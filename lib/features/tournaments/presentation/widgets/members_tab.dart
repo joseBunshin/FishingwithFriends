@@ -1,7 +1,9 @@
+import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/core/widgets/section_label.dart';
 import 'package:fishing_with_friends/features/friends/data/friends_repository_provider.dart';
+import 'package:fishing_with_friends/features/profile/data/my_profile_repository_provider.dart';
 import 'package:fishing_with_friends/features/profile/presentation/widgets/avatar_view.dart';
 import 'package:fishing_with_friends/features/tournaments/application/tournament_member_controller.dart';
 import 'package:fishing_with_friends/features/tournaments/data/tournaments_repository_provider.dart';
@@ -217,7 +219,15 @@ class _MemberRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final bundle = ref.watch(friendsBundleProvider).valueOrNull;
-    final profile = bundle?.profilesById[member.anglerId];
+    // The friends bundle never includes the signed-in user's own profile
+    // (you can't be your own friend) — so the creator's row in their own
+    // tournament was always falling back to '@angler'. Resolve it via
+    // myProfileProvider when the row belongs to the current user.
+    final me = ref.watch(currentUserProvider);
+    final myProfile = ref.watch(myProfileProvider).valueOrNull;
+    final profile = (me != null && member.anglerId == me.id)
+        ? myProfile
+        : bundle?.profilesById[member.anglerId];
     final hasDisplayName = profile?.displayName?.isNotEmpty ?? false;
     final primary = hasDisplayName
         ? profile!.displayName!

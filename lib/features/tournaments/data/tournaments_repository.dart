@@ -30,13 +30,17 @@ class TournamentsRepository {
       final inserted = await dataSource.insertTournament(row);
       final tournament = TournamentDto.fromRow(inserted);
 
-      // Bulk-invite friends if any.
+      // Bulk-invite friends if any. Creator-picked friends are trusted —
+      // they land directly as 'accepted' so they can fish without a
+      // pending/approval round-trip. Migration 0028 widens the
+      // notify_tournament_invite trigger so 'accepted' inserts still
+      // surface a "you've been invited" notification.
       if (input.invitedAnglerIds.isNotEmpty) {
         final memberRows = input.invitedAnglerIds
             .map((id) => {
                   'tournament_id': tournament.id,
                   'angler_id': id,
-                  'status': 'pending',
+                  'status': 'accepted',
                 })
             .toList();
         await dataSource.insertMembers(memberRows);
@@ -90,16 +94,16 @@ class TournamentsRepository {
     }
   }
 
-  /// Creator-side invite: drop pending member rows for [anglerIds] under
+  /// Creator-side invite: drop accepted member rows for [anglerIds] under
   /// [tournamentId]. RLS (migration 0022) restricts this to the creator.
-  /// Pre-existing rows skip via on-conflict-do-nothing semantics on the
-  /// upsert. Anglers get a `tournament_invite` notification via the
-  /// 0006 trigger.
+  /// Pre-existing rows surface as a friendly unique-violation message.
   ///
-  /// Status is `pending` so the invitee can opt in (matches the
-  /// existing "review your invite" notification UX). The creator can
-  /// later flip them to accepted via the existing approval path, or
-  /// the angler self-accepts when we wire up the invite-acceptance UI.
+  /// Status is `accepted` because the creator picked these friends
+  /// explicitly — there's nothing for the invitee to approve. The 0028
+  /// trigger relaxation still fires `tournament_invite` notifications
+  /// so they see "you've been invited to the tournament" in their feed.
+  /// Cold-invite (requestJoinByCode) keeps `pending` so creators can
+  /// gate strangers.
   Future<int> inviteMembers({
     required String tournamentId,
     required List<String> anglerIds,
@@ -111,7 +115,7 @@ class TournamentsRepository {
             (id) => {
               'tournament_id': tournamentId,
               'angler_id': id,
-              'status': 'pending',
+              'status': 'accepted',
             },
           )
           .toList();

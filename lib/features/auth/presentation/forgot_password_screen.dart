@@ -36,6 +36,11 @@ class _ForgotPasswordScreenState
     try {
       await ref.read(supabaseClientProvider).auth.resetPasswordForEmail(
             _emailCtl.text.trim(),
+            // Explicit redirect so the recovery email lands on the GitHub
+            // Pages handler (#type=recovery → "Open the app" card). The
+            // trailing slash MUST match the Supabase Auth → URL
+            // Configuration → Redirect URLs entry exactly.
+            redirectTo: 'https://josebunshin.github.io/fishingwithfriends/',
           );
       if (!mounted) return;
       setState(() => _sent = true);

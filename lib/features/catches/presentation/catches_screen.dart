@@ -90,12 +90,11 @@ class _CatchesGrid extends ConsumerWidget {
           )
         else
           SliverPadding(
-            padding: EdgeInsets.fromLTRB(
+            padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               0,
               AppSpacing.lg,
-              // Bottom-nav clearance (extendBody:true on the shell scaffold).
-              88 + MediaQuery.viewPaddingOf(context).bottom,
+              AppSpacing.xxxl,
             ),
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

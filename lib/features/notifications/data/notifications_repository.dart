@@ -57,6 +57,20 @@ class NotificationsRepository {
     }
   }
 
+  /// Hard-delete a single notification by id. RLS policy
+  /// `notifications_delete_own` (migration 0027) gates this to the row's
+  /// recipient.
+  Future<void> delete(String id) async {
+    try {
+      await _client.from('notifications').delete().eq('id', id);
+    } on PostgrestException catch (e) {
+      throw NetworkFailure(
+        'Failed to delete notification: ${e.message}',
+        cause: e,
+      );
+    }
+  }
+
   AppNotification _fromRow(Map<String, dynamic> row) {
     final readRaw = row['read_at'] as String?;
     final payload = row['payload'];

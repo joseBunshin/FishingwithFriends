@@ -51,6 +51,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         await auth.signUp(
           email: _emailCtl.text.trim(),
           password: _passwordCtl.text,
+          // Explicit redirect so the email's confirmation link lands on
+          // our GitHub Pages handler (which detects #type=signup and
+          // shows "Email confirmed!"). Without this, Supabase falls back
+          // to whatever Site URL is set in the dashboard, which is brittle.
+          // The trailing slash MUST match the entry in Auth → URL
+          // Configuration → Redirect URLs.
+          emailRedirectTo: 'https://josebunshin.github.io/fishingwithfriends/',
         );
         if (!mounted) return;
         // Supabase returns a session-less user when email confirmation

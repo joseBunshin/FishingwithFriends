@@ -92,19 +92,27 @@ void main() {
       expect(find.text('catch log screen'), findsOneWidget);
     });
 
-    testWidgets('does not overflow or wrap labels at 375pt width (iPhone SE)',
+    testWidgets('Tourneys label scales down rather than truncating at 375pt',
         (tester) async {
       await tester.pumpWidget(_wrap(size: const Size(375, 667)));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
 
-      // Regression: "Tourneys" must render on a single line. With
-      // softWrap:false + maxLines:1, the Text widget reports a single
-      // line; without those, an extra line of laid-out text appeared.
-      final tourneysText = tester.widget<Text>(find.text('Tourneys'));
-      expect(tourneysText.maxLines, 1);
-      expect(tourneysText.softWrap, isFalse);
+      // Regression: previously softWrap:false + overflow:fade truncated
+      // the trailing 's' in "Tourneys" at iPhone SE width. FittedBox
+      // shrinks the text instead, preserving every character.
+      final tourneysFinder = find.text('Tourneys');
+      expect(tourneysFinder, findsOneWidget);
+
+      // The Text must be wrapped in a FittedBox(scaleDown) ancestor.
+      final fittedBoxFinder = find.ancestor(
+        of: tourneysFinder,
+        matching: find.byType(FittedBox),
+      );
+      expect(fittedBoxFinder, findsOneWidget);
+      final fittedBox = tester.widget<FittedBox>(fittedBoxFinder);
+      expect(fittedBox.fit, BoxFit.scaleDown);
     });
   });
 }

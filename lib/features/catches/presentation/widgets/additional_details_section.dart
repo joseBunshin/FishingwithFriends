@@ -2,7 +2,9 @@ import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 /// Collapsible "Additional Details" section that lives below the main fields.
-/// Holds notes, rig/lure, and a stub for the Conditions block (M6).
+/// Holds notes and rig/lure. Conditions used to live here as a stub
+/// promising "auto-filled in M6" — that shipped, conditions populate
+/// post-save and surface on the catch detail screen, so the stub is gone.
 class AdditionalDetailsSection extends StatelessWidget {
   const AdditionalDetailsSection({
     required this.notesController,
@@ -36,10 +38,14 @@ class AdditionalDetailsSection extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           children: [
+            // hintText (not labelText) so the placeholder simply
+            // disappears on focus instead of floating up to the top-left
+            // of the field — that floating animation read as "weird"
+            // to users.
             TextFormField(
               controller: rigController,
               decoration: const InputDecoration(
-                labelText: 'Rig / lure / bait',
+                hintText: 'Rig / lure / bait',
                 prefixIcon: Icon(Icons.settings_outlined),
               ),
             ),
@@ -48,50 +54,11 @@ class AdditionalDetailsSection extends StatelessWidget {
               controller: notesController,
               maxLines: 3,
               decoration: const InputDecoration(
-                labelText: 'Notes',
-                alignLabelWithHint: true,
+                hintText: 'Notes',
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
-            _ConditionsStub(),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _ConditionsStub extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.cloud_outlined, color: scheme.primary),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Conditions',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                Text(
-                  'Weather, water temp, tide, moon — auto-filled in M6.',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
