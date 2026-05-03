@@ -67,7 +67,9 @@ void main() {
         await c.read(conditionsCorrelationProvider.future);
     expect(result, isNotEmpty);
     expect(result.first.species, 'Bass');
-    expect(result.first.tempBucket, contains('°C water'));
+    // DisplayUnits defaults to imperial (51f4bb7) — bucket is rendered
+    // in °F regardless of the °C input on the catch row.
+    expect(result.first.tempBucket, contains('°F water'));
   });
 
   test('catches without conditions are ignored', () async {

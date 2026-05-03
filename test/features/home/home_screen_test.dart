@@ -61,10 +61,12 @@ void main() {
       await tester.pumpWidget(_wrap(metrics: const AsyncData(HomeMetrics.empty())));
       await tester.pumpAndSettle();
 
-      expect(find.text('Total Catches'), findsOneWidget);
-      expect(find.text('Total Weight'), findsOneWidget);
-      expect(find.text('Species'), findsOneWidget);
-      expect(find.text('Biggest'), findsOneWidget);
+      // StatTile uppercases the label for the modernized typography
+      // (lib/features/home/presentation/widgets/stat_tile.dart).
+      expect(find.text('TOTAL CATCHES'), findsOneWidget);
+      expect(find.text('TOTAL WEIGHT'), findsOneWidget);
+      expect(find.text('SPECIES'), findsOneWidget);
+      expect(find.text('BIGGEST'), findsOneWidget);
       expect(find.text('No catches in your feed yet'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Log a catch'), findsOneWidget);
       expect(find.widgetWithText(OutlinedButton, 'Find anglers'),

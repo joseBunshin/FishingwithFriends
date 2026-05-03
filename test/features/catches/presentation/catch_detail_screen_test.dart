@@ -104,14 +104,14 @@ void main() {
       expect(hero.tag, 'catch-photo-42');
     });
 
-    testWidgets('Secret Spot row reads "Location hidden" not coordinates',
+    testWidgets('Secret Spot row reads "Secret spot" not coordinates',
         (tester) async {
       await _tall(tester);
       await tester.pumpWidget(_wrap(AsyncData<Catch?>(_c(secretSpot: true))));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
-      expect(find.text('Location hidden'), findsOneWidget);
+      expect(find.text('Secret spot'), findsOneWidget);
       expect(
         find.textContaining('40.456'),
         findsNothing,
