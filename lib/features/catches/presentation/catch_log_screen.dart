@@ -220,7 +220,20 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
         title: const Text('Log a Catch'),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: saving ? null : context.pop,
+          // Explicit lambda + canPop check + Home fallback. context.pop
+          // as a tear-off is technically a `void Function([T?])` and was
+          // observed not firing reliably on the IconButton callback in
+          // the first TestFlight build. The fallback covers cold-launch
+          // / deep-link cases where the route stack is empty.
+          onPressed: saving
+              ? null
+              : () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(AppRoutes.home);
+                  }
+                },
         ),
       ),
       body: AbsorbPointer(
