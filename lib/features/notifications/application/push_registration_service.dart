@@ -66,18 +66,30 @@ class PushRegistrationService {
       }
 
       // iOS needs APNs to be registered before getToken returns.
+      // getAPNSToken() returns the cached token; it does NOT wait for iOS
+      // to complete registration. On a fresh app launch, registration can
+      // take 1-5+ seconds (network round-trip to Apple). Retry with backoff
+      // so the post-save call doesn't race the launch-time registration.
       String? apnsToken;
       if (Platform.isIOS || Platform.isMacOS) {
-        await _debugNotify('FCM step 3: fetching APNs token');
-        apnsToken = await messaging.getAPNSToken();
+        await _debugNotify('FCM step 3: fetching APNs token (with retry)');
+        for (var i = 0; i < 6; i++) {
+          apnsToken = await messaging.getAPNSToken();
+          if (apnsToken != null) break;
+          await _debugNotify(
+            'FCM step 3.${i + 1}: APNs token still NULL, retrying in 1.5s',
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 1500));
+        }
         await _debugNotify(
-          'FCM step 4: APNs token = ${apnsToken == null ? "NULL" : "ok (${apnsToken.length} chars)"}',
+          'FCM step 4: APNs token = ${apnsToken == null ? "NULL after 6 retries" : "ok (${apnsToken.length} chars)"}',
         );
         if (apnsToken == null) {
           await _debugNotify(
-            'FCM aborted: APNs token null — usually means APNs config in '
-            'Firebase has wrong Team ID / Key ID, or app entitlement env '
-            'mismatches build env (TestFlight needs production)',
+            'FCM aborted: APNs token still null after ~9s of retries. '
+            'iOS itself is refusing to issue an APNs token — likely '
+            'provisioning profile missing push entitlement, or stale '
+            'profile cached. Try a fresh archive in Xcode.',
           );
           return false;
         }
