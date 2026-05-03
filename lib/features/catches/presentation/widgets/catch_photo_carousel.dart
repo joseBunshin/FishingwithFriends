@@ -34,13 +34,18 @@ class _CatchPhotoCarouselState extends ConsumerState<CatchPhotoCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    // The carousel intentionally fills whatever space its parent gives
+    // it (the SliverAppBar's expandedHeight on the catch detail screen).
+    // Earlier versions wrapped in AspectRatio(4/3) which under-filled
+    // a 320pt SliverAppBar at typical iPhone widths and exposed the
+    // navy backgroundColor as a gutter. BoxFit.cover already handles
+    // landscape vs. portrait photos correctly.
     if (widget.photoPaths.isEmpty) {
       return Hero(
         tag: 'catch-photo-${widget.catchId}',
-        child: AspectRatio(
-          aspectRatio: 4 / 3,
-          child: ColoredBox(
-            color: AppColors.mist.withValues(alpha: 0.6),
+        child: ColoredBox(
+          color: AppColors.mist.withValues(alpha: 0.6),
+          child: Center(
             child: Icon(
               Icons.set_meal_outlined,
               size: 64,
@@ -53,8 +58,7 @@ class _CatchPhotoCarouselState extends ConsumerState<CatchPhotoCarousel> {
 
     return Stack(
       children: [
-        AspectRatio(
-          aspectRatio: 4 / 3,
+        Positioned.fill(
           child: PageView.builder(
             controller: _controller,
             itemCount: widget.photoPaths.length,
