@@ -28,11 +28,27 @@ class ShareCardExporter {
     required BuildContext context,
     required Catch catch_,
   }) async {
+    final hasPhoto = catch_.photoPaths.isNotEmpty;
     final photoUrl = await _resolvePhotoUrl(catch_);
     // Pre-warm the image cache so the offscreen render doesn't race the
     // network. Without this, `CachedNetworkImage` shows its placeholder
     // and we capture a blank navy panel.
     final photoBytes = photoUrl == null ? null : await _prefetch(photoUrl);
+
+    // Surface a SnackBar when the catch has a photo but it didn't make
+    // it into the share card. Don't block the share — let the user
+    // ship the card with the navy fallback if they want — but tell
+    // them why so they're not confused by "where's my fish?"
+    if (hasPhoto && photoBytes == null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Couldn't load the photo for this share card. Sharing without it.",
+          ),
+        ),
+      );
+    }
+
     final bytes = await _capture(catch_, photoUrl, photoBytes);
     if (bytes == null) return false;
 
@@ -70,7 +86,11 @@ class ShareCardExporter {
       return await _ref
           .read(photoStorageProvider)
           .signedUrl(catch_.photoPaths.first);
-    } on Exception {
+    } on Exception catch (e) {
+      debugPrint(
+        'share-card: signed URL resolution failed for catch '
+        '${catch_.id}: $e',
+      );
       return null;
     }
   }
