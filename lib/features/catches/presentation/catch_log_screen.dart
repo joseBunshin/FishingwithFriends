@@ -99,18 +99,13 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
   }
 
   Future<void> _pickTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _time,
-    );
+    final picked = await showTimePicker(context: context, initialTime: _time);
     if (picked != null) setState(() => _time = picked);
   }
 
   Future<void> _useMyLocation() async {
     setState(() => _resolvingLocation = true);
-    final result = await ref
-        .read(locationServiceProvider)
-        .currentPosition();
+    final result = await ref.read(locationServiceProvider).currentPosition();
     if (!mounted) return;
     setState(() {
       _resolvingLocation = false;
@@ -133,12 +128,12 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
   }
 
   DateTime get _caughtAt => DateTime(
-        _date.year,
-        _date.month,
-        _date.day,
-        _time.hour,
-        _time.minute,
-      ).toUtc();
+    _date.year,
+    _date.month,
+    _date.day,
+    _time.hour,
+    _time.minute,
+  ).toUtc();
 
   CatchInput _buildInput() {
     return CatchInput(
@@ -169,7 +164,8 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
     }
 
     final controller = ref.read(saveCatchControllerProvider.notifier);
-    if (ref.read(saveCatchControllerProvider).isLoading) return; // double-tap guard
+    if (ref.read(saveCatchControllerProvider).isLoading)
+      return; // double-tap guard
 
     final saved = await controller.submit(_buildInput());
     if (!mounted) return;
@@ -219,12 +215,13 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
       appBar: AppBar(
         title: const Text('Log a Catch'),
         leading: IconButton(
-          icon: const Icon(Icons.close),
-          // Explicit lambda + canPop check + Home fallback. context.pop
-          // as a tear-off is technically a `void Function([T?])` and was
-          // observed not firing reliably on the IconButton callback in
-          // the first TestFlight build. The fallback covers cold-launch
-          // / deep-link cases where the route stack is empty.
+          // iOS-style back chevron — visually reads as "back" to users.
+          // Previously was Icons.close (X) which the user kept reporting
+          // as "back arrow doesn't work" — it worked, but the icon
+          // didn't match their mental model of "go back."
+          icon: const Icon(Icons.arrow_back_ios_new),
+          // canPop + Home fallback covers the cold-launch / deep-link
+          // edge case where the route stack is empty.
           onPressed: saving
               ? null
               : () {
@@ -240,177 +237,192 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
         absorbing: saving,
         child: Stack(
           children: [
-            Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                children: [
-                  _TripAffordance(),
-                  const SizedBox(height: AppSpacing.md),
-                  PhotoDropTarget(
-                    photos: _photos,
-                    onAdd: _addPhoto,
-                    onRemove: _removePhoto,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  const _SectionLabel('Species *'),
-                  const SizedBox(height: AppSpacing.xs),
-                  DropdownButtonFormField<String>(
-                    initialValue: _species,
-                    decoration: const InputDecoration(
-                      hintText: 'Select species',
-                      prefixIcon: Icon(Icons.set_meal_outlined),
+            // Tap-outside-to-dismiss for the keyboard. iOS numeric
+            // keyboards (weight, length) have no Done key and multi-line
+            // notes treats Return as newline, so the user had no way to
+            // close the keyboard once it opened. Translucent hit-test so
+            // taps still pass through to fields, buttons, etc.
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  children: [
+                    _TripAffordance(),
+                    const SizedBox(height: AppSpacing.md),
+                    PhotoDropTarget(
+                      photos: _photos,
+                      onAdd: _addPhoto,
+                      onRemove: _removePhoto,
                     ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'Largemouth Bass',
-                        child: Text('Largemouth Bass'),
+                    const SizedBox(height: AppSpacing.xl),
+                    const _SectionLabel('Species *'),
+                    const SizedBox(height: AppSpacing.xs),
+                    DropdownButtonFormField<String>(
+                      initialValue: _species,
+                      decoration: const InputDecoration(
+                        hintText: 'Select species',
+                        prefixIcon: Icon(Icons.set_meal_outlined),
                       ),
-                      DropdownMenuItem(
-                        value: 'Rainbow Trout',
-                        child: Text('Rainbow Trout'),
-                      ),
-                      DropdownMenuItem(value: 'Walleye', child: Text('Walleye')),
-                      DropdownMenuItem(value: 'Snook', child: Text('Snook')),
-                      DropdownMenuItem(value: 'Redfish', child: Text('Redfish')),
-                    ],
-                    onChanged: (v) => setState(() => _species = v),
-                    validator: (v) => v == null ? 'Required' : null,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: WeightToggleField(
-                          label: 'Weight *',
-                          onMetricChanged: (kg) => _weightKg = kg,
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'Largemouth Bass',
+                          child: Text('Largemouth Bass'),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: LengthToggleField(
-                          label: 'Length *',
-                          onMetricChanged: (cm) => _lengthCm = cm,
+                        DropdownMenuItem(
+                          value: 'Rainbow Trout',
+                          child: Text('Rainbow Trout'),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _DateTimeField(
-                          label: 'Date',
-                          icon: Icons.calendar_today_outlined,
-                          text: DateFormat.yMd().format(_date),
-                          onTap: _pickDate,
+                        DropdownMenuItem(
+                          value: 'Walleye',
+                          child: Text('Walleye'),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: _DateTimeField(
-                          label: 'Time',
-                          icon: Icons.access_time,
-                          text: _time.format(context),
-                          onTap: _pickTime,
+                        DropdownMenuItem(value: 'Snook', child: Text('Snook')),
+                        DropdownMenuItem(
+                          value: 'Redfish',
+                          child: Text('Redfish'),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  const _SectionLabel('Location'),
-                  const SizedBox(height: AppSpacing.xs),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _locationCtl,
-                          decoration: const InputDecoration(
-                            hintText: 'Lake, river, or city',
-                            prefixIcon: Icon(Icons.location_on_outlined),
+                      ],
+                      onChanged: (v) => setState(() => _species = v),
+                      validator: (v) => v == null ? 'Required' : null,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: WeightToggleField(
+                            label: 'Weight *',
+                            onMetricChanged: (kg) => _weightKg = kg,
                           ),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      IconButton.filledTonal(
-                        onPressed: _resolvingLocation ? null : _useMyLocation,
-                        icon: _resolvingLocation
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.my_location),
-                        tooltip: 'Use my location',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  AdditionalDetailsSection(
-                    notesController: _notesCtl,
-                    rigController: _rigCtl,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Card(
-                    child: Column(
-                      children: [
-                        SwitchListTile(
-                          value: _catchAndRelease,
-                          onChanged: (v) {
-                            HapticFeedback.selectionClick();
-                            setState(() => _catchAndRelease = v);
-                          },
-                          secondary: const Icon(Icons.water_drop_outlined),
-                          title: const Text('Catch & Release'),
-                          subtitle: const Text('I released this fish back.'),
-                        ),
-                        const Divider(height: 1),
-                        SwitchListTile(
-                          value: _secretSpot,
-                          onChanged: (v) {
-                            HapticFeedback.selectionClick();
-                            setState(() => _secretSpot = v);
-                          },
-                          secondary: const Icon(Icons.lock_outline),
-                          title: const Text('Secret Spot'),
-                          subtitle: const Text(
-                            'Hide GPS location from friends.',
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: LengthToggleField(
+                            label: 'Length *',
+                            onMetricChanged: (cm) => _lengthCm = cm,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(56),
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _DateTimeField(
+                            label: 'Date',
+                            icon: Icons.calendar_today_outlined,
+                            text: DateFormat.yMd().format(_date),
+                            onTap: _pickDate,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: _DateTimeField(
+                            label: 'Time',
+                            icon: Icons.access_time,
+                            text: _time.format(context),
+                            onTap: _pickTime,
+                          ),
+                        ),
+                      ],
                     ),
-                    onPressed: saving ? null : _save,
-                    icon: saving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.white,
-                              ),
+                    const SizedBox(height: AppSpacing.lg),
+                    const _SectionLabel('Location'),
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _locationCtl,
+                            decoration: const InputDecoration(
+                              hintText: 'Lake, river, or city',
+                              prefixIcon: Icon(Icons.location_on_outlined),
                             ),
-                          )
-                        : const Icon(Icons.check),
-                    label: Text(
-                      saving ? 'Saving…' : 'Save Catch',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton.filledTonal(
+                          onPressed: _resolvingLocation ? null : _useMyLocation,
+                          icon: _resolvingLocation
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.my_location),
+                          tooltip: 'Use my location',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    AdditionalDetailsSection(
+                      notesController: _notesCtl,
+                      rigController: _rigCtl,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Card(
+                      child: Column(
+                        children: [
+                          SwitchListTile(
+                            value: _catchAndRelease,
+                            onChanged: (v) {
+                              HapticFeedback.selectionClick();
+                              setState(() => _catchAndRelease = v);
+                            },
+                            secondary: const Icon(Icons.water_drop_outlined),
+                            title: const Text('Catch & Release'),
+                            subtitle: const Text('I released this fish back.'),
+                          ),
+                          const Divider(height: 1),
+                          SwitchListTile(
+                            value: _secretSpot,
+                            onChanged: (v) {
+                              HapticFeedback.selectionClick();
+                              setState(() => _secretSpot = v);
+                            },
+                            secondary: const Icon(Icons.lock_outline),
+                            title: const Text('Secret Spot'),
+                            subtitle: const Text(
+                              'Hide GPS location from friends.',
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
+                    const SizedBox(height: AppSpacing.xxl),
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(56),
+                      ),
+                      onPressed: saving ? null : _save,
+                      icon: saving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.white,
+                                ),
+                              ),
+                            )
+                          : const Icon(Icons.check),
+                      label: Text(
+                        saving ? 'Saving…' : 'Save Catch',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
+                ),
               ),
             ),
             if (saving)
@@ -433,9 +445,9 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
     );
   }
 }
@@ -482,9 +494,7 @@ class _TripAffordance extends ConsumerWidget {
       onPressed: () => StartTripSheet.show(context),
       icon: const Icon(Icons.directions_boat_outlined, size: 18),
       label: const Text('Start a trip'),
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size.fromHeight(44),
-      ),
+      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
     );
   }
 }
