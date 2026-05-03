@@ -137,31 +137,41 @@ class PushRegistrationService {
     return 'web';
   }
 
-  /// TEMPORARY DEBUG SURFACE — fires a local notification with [msg].
-  /// Local notifications are already authorized at app launch, so this
-  /// works even when FCM/APNs is broken. Remove once push delivery is
-  /// verified end-to-end.
+  /// TEMPORARY DEBUG SURFACE — writes a row to public.push_debug_log so
+  /// we can query the registration chain remotely in SQL editor without
+  /// needing device logs. Migration 0026 created the table.
+  /// Remove once push delivery is verified end-to-end.
   Future<void> _debugNotify(String msg) async {
     debugPrint('[push-debug] $msg');
+    final user = _ref.read(currentUserProvider);
+    if (user == null) return;
     try {
-      // Each call gets a unique id from the current millisecond so the
-      // notifications don't replace each other in the tray.
-      await _local.show(
-        DateTime.now().millisecondsSinceEpoch.remainder(1 << 31),
-        'Push debug',
-        msg,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'default',
-            'General',
-            importance: Importance.high,
-            priority: Priority.high,
-          ),
-          iOS: DarwinNotificationDetails(),
-        ),
-      );
+      await _ref.read(supabaseClientProvider).from('push_debug_log').insert({
+        'user_id': user.id,
+        'msg': msg,
+      });
     } on Object catch (e) {
-      debugPrint('[push-debug] failed to show notification: $e');
+      // Last-resort: still try local notifications so we have SOMETHING
+      // visible even if Supabase write fails.
+      debugPrint('[push-debug] table insert failed: $e');
+      try {
+        await _local.show(
+          DateTime.now().millisecondsSinceEpoch.remainder(1 << 31),
+          'Push debug',
+          msg,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'default',
+              'General',
+              importance: Importance.high,
+              priority: Priority.high,
+            ),
+            iOS: DarwinNotificationDetails(),
+          ),
+        );
+      } on Object catch (_) {
+        // Both surfaces failed; nothing more we can do without a cable.
+      }
     }
   }
 }
