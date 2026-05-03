@@ -1,3 +1,4 @@
+import 'package:fishing_with_friends/core/router/app_router.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/core/units/measurement_format.dart';
@@ -74,7 +75,16 @@ class _CelebrationScreenState extends ConsumerState<CelebrationScreen> {
                   right: AppSpacing.xs,
                   child: IconButton(
                     icon: const Icon(Icons.close, color: AppColors.white),
-                    onPressed: () => context.go('/home'),
+                    // Pop returns to whatever was below /celebrate
+                    // (typically /home via the catch_log
+                    // pushReplacement). Cold-launch falls back to home.
+                    onPressed: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go(AppRoutes.home);
+                      }
+                    },
                   ),
                 ),
                 Positioned(
@@ -250,7 +260,9 @@ class _CtaRow extends ConsumerWidget {
             onPressed: () async {
               await HapticFeedback.mediumImpact();
               if (!context.mounted) return;
-              context.go('/catches/$catchId');
+              // pushReplacement (not go) so the underlying shell
+              // route is preserved as the pop target on /catches/:id.
+              context.pushReplacement('/catches/$catchId');
             },
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
@@ -260,7 +272,15 @@ class _CtaRow extends ConsumerWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         TextButton(
-          onPressed: () => context.go('/home'),
+          // Same canPop guard as the close button — pop returns to
+          // whatever was below /celebrate, falls back to /home.
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutes.home);
+            }
+          },
           style: TextButton.styleFrom(foregroundColor: AppColors.mist),
           child: const Text('Done'),
         ),
@@ -287,9 +307,11 @@ class _Fallback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Couldn't load outcome (or empty) — degrade to the catch detail.
+    // pushReplacement (not go) so /catches/:id keeps the underlying
+    // shell route as its pop target instead of stranding the user.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!context.mounted) return;
-      context.go('/catches/$catchId');
+      context.pushReplacement('/catches/$catchId');
     });
     return const _Loading();
   }

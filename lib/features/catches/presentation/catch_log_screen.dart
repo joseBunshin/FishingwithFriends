@@ -182,14 +182,18 @@ class _CatchLogScreenState extends ConsumerState<CatchLogScreen> {
         final outcome = await ref.read(saveOutcomeProvider(saved.id).future);
         if (!mounted) return;
         if (outcome.isCelebratory) {
-          context.go('/celebrate/${saved.id}');
+          // pushReplacement (not go) so the underlying shell route is
+          // preserved as the pop target — without this, /celebrate sits
+          // on an empty stack and the back affordance traps the user.
+          context.pushReplacement('/celebrate/${saved.id}');
           return;
         }
       } on Object {
         // Any failure here degrades to the catch detail — celebration is
         // best-effort, never blocks the success path.
       }
-      context.go('/catches/${saved.id}');
+      // Same reasoning as the celebrate branch above.
+      context.pushReplacement('/catches/${saved.id}');
       return;
     }
 

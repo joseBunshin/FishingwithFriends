@@ -1,3 +1,4 @@
+import 'package:fishing_with_friends/core/router/app_router.dart';
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
@@ -59,7 +60,17 @@ class _Body extends ConsumerWidget {
           expandedHeight: 320,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
+            // canPop covers normal navigation (push or pushReplacement
+            // from /log preserves a shell route below). Cold-launch
+            // via push notification has no underlying route — fall
+            // through to /home so the back affordance is never a no-op.
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go(AppRoutes.home);
+              }
+            },
           ),
           actions: [
             _ShareAction(catch_: catch_),
@@ -81,7 +92,16 @@ class _Body extends ConsumerWidget {
                       context,
                       catch_: catch_,
                     );
-                    if (deleted && context.mounted) context.pop();
+                    if (deleted && context.mounted) {
+                      // Same canPop guard — the catch is gone, so
+                      // popping to a previous list/home is correct;
+                      // /home is the safe fallback when stack is empty.
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go(AppRoutes.home);
+                      }
+                    }
                   }
                 },
                 itemBuilder: (_) => const [
@@ -746,7 +766,13 @@ class _NotAvailable extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               FilledButton(
-                onPressed: () => context.pop(),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(AppRoutes.home);
+                  }
+                },
                 child: const Text('Back'),
               ),
             ],
