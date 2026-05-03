@@ -1,0 +1,195 @@
+{
+  "type": "FeatureCollection",
+  "name": "fwf_mpa_simplified_v1",
+  "metadata": {
+    "source": "NOAA Office of National Marine Sanctuaries — public domain (17 USC 105)",
+    "source_url": "https://sanctuaries.noaa.gov/",
+    "version": "v1-starter-2026-05",
+    "description": "Hand-simplified bounding polygons for major US National Marine Sanctuaries. Used by Fishing with Friends for display-time MPA suppression on the catch map. Polygons are intentionally coarse — they over-approximate the protected area, which is privacy-correct (a catch displayed slightly offset because it sits near a sanctuary boundary is harmless; the goal is to never reveal a catch inside one).",
+    "coordinate_order": "[longitude, latitude]"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Florida Keys National Marine Sanctuary", "code": "FKNMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-83.10, 24.40],
+          [-80.00, 24.40],
+          [-80.00, 25.85],
+          [-83.10, 25.85],
+          [-83.10, 24.40]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Channel Islands National Marine Sanctuary", "code": "CINMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-120.50, 33.30],
+          [-119.30, 33.30],
+          [-119.30, 34.20],
+          [-120.50, 34.20],
+          [-120.50, 33.30]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Monterey Bay National Marine Sanctuary", "code": "MBNMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-123.00, 35.55],
+          [-121.80, 35.55],
+          [-121.80, 37.90],
+          [-123.00, 37.90],
+          [-123.00, 35.55]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Greater Farallones National Marine Sanctuary", "code": "GFNMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-123.60, 37.40],
+          [-122.40, 37.40],
+          [-122.40, 38.40],
+          [-123.60, 38.40],
+          [-123.60, 37.40]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Cordell Bank National Marine Sanctuary", "code": "CBNMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-123.65, 37.85],
+          [-122.95, 37.85],
+          [-122.95, 38.40],
+          [-123.65, 38.40],
+          [-123.65, 37.85]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Olympic Coast National Marine Sanctuary", "code": "OCNMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-125.10, 47.50],
+          [-124.20, 47.50],
+          [-124.20, 48.50],
+          [-125.10, 48.50],
+          [-125.10, 47.50]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Stellwagen Bank National Marine Sanctuary", "code": "SBNMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-70.65, 42.05],
+          [-70.05, 42.05],
+          [-70.05, 42.75],
+          [-70.65, 42.75],
+          [-70.65, 42.05]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Gray's Reef National Marine Sanctuary", "code": "GRNMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-80.95, 31.30],
+          [-80.75, 31.30],
+          [-80.75, 31.50],
+          [-80.95, 31.50],
+          [-80.95, 31.30]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Flower Garden Banks National Marine Sanctuary", "code": "FGBNMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-94.00, 27.70],
+          [-93.40, 27.70],
+          [-93.40, 28.20],
+          [-94.00, 28.20],
+          [-94.00, 27.70]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Hawaiian Islands Humpback Whale National Marine Sanctuary", "code": "HIHWNMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-160.30, 19.50],
+          [-155.80, 19.50],
+          [-155.80, 22.40],
+          [-160.30, 22.40],
+          [-160.30, 19.50]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Papahānaumokuākea Marine National Monument", "code": "PMNM" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-180.00, 22.50],
+          [-160.00, 22.50],
+          [-160.00, 30.00],
+          [-180.00, 30.00],
+          [-180.00, 22.50]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Thunder Bay National Marine Sanctuary", "code": "TBNMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-83.85, 44.70],
+          [-83.05, 44.70],
+          [-83.05, 45.50],
+          [-83.85, 45.50],
+          [-83.85, 44.70]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Mallows Bay-Potomac National Marine Sanctuary", "code": "MBPNMS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-77.31, 38.45],
+          [-77.22, 38.45],
+          [-77.22, 38.55],
+          [-77.31, 38.55],
+          [-77.31, 38.45]
+        ]]
+      }
+    }
+  ]
+}

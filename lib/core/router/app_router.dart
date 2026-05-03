@@ -1,11 +1,30 @@
 import 'package:fishing_with_friends/core/router/app_shell.dart';
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
+import 'package:fishing_with_friends/features/auth/presentation/forgot_password_screen.dart';
+import 'package:fishing_with_friends/features/auth/presentation/reset_password_screen.dart';
 import 'package:fishing_with_friends/features/auth/presentation/sign_in_screen.dart';
+import 'package:fishing_with_friends/features/catches/presentation/catch_detail_screen.dart';
 import 'package:fishing_with_friends/features/catches/presentation/catch_log_screen.dart';
 import 'package:fishing_with_friends/features/catches/presentation/catches_screen.dart';
+import 'package:fishing_with_friends/features/friends/presentation/friends_screen.dart';
+import 'package:fishing_with_friends/features/home/presentation/home_screen.dart';
+import 'package:fishing_with_friends/features/map/presentation/map_screen.dart';
+import 'package:fishing_with_friends/features/me/presentation/me_screen.dart';
+import 'package:fishing_with_friends/features/notifications/presentation/notification_preferences_screen.dart';
+import 'package:fishing_with_friends/features/notifications/presentation/notifications_screen.dart';
+import 'package:fishing_with_friends/features/profile/data/my_profile_repository_provider.dart';
+import 'package:fishing_with_friends/features/profile/presentation/edit_profile_screen.dart';
+import 'package:fishing_with_friends/features/profile/presentation/onboarding_screen.dart';
 import 'package:fishing_with_friends/features/profile/presentation/profile_screen.dart';
-import 'package:fishing_with_friends/features/social/presentation/feed_screen.dart';
+import 'package:fishing_with_friends/features/settings/presentation/settings_screen.dart';
+import 'package:fishing_with_friends/features/splash/presentation/splash_screen.dart';
+import 'package:fishing_with_friends/features/stats/presentation/stats_screen.dart';
+import 'package:fishing_with_friends/features/storytelling/presentation/celebration_screen.dart';
+import 'package:fishing_with_friends/features/storytelling/presentation/year_in_review_screen.dart';
+import 'package:fishing_with_friends/features/tournaments/presentation/angler_entries_screen.dart';
+import 'package:fishing_with_friends/features/tournaments/presentation/tournament_detail_screen.dart';
 import 'package:fishing_with_friends/features/tournaments/presentation/tournaments_screen.dart';
+import 'package:fishing_with_friends/features/trips/presentation/trip_detail_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,12 +32,20 @@ import 'package:go_router/go_router.dart';
 class AppRoutes {
   const AppRoutes._();
 
+  static const splash = '/splash';
   static const signIn = '/sign-in';
-  static const feed = '/feed';
+  static const forgotPassword = '/forgot-password';
+  static const resetPassword = '/reset-password';
+  static const onboarding = '/onboarding';
+  static const home = '/home';
   static const catches = '/catches';
   static const logCatch = '/log';
-  static const tournaments = '/tournaments';
-  static const profile = '/profile';
+  static const stats = '/stats';
+  static const tourneys = '/tourneys';
+  static const map = '/map';
+  static const friends = '/friends';
+  static const me = '/me';
+  static const catchDetail = '/catches/:id';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -26,44 +53,167 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(notifier.dispose);
 
   return GoRouter(
-    initialLocation: AppRoutes.feed,
+    initialLocation: AppRoutes.splash,
     refreshListenable: notifier,
     redirect: (context, state) {
       final user = ref.read(currentUserProvider);
       final isSignedIn = user != null;
+      final goingToSplash = state.matchedLocation == AppRoutes.splash;
       final goingToSignIn = state.matchedLocation == AppRoutes.signIn;
+      final goingToOnboarding =
+          state.matchedLocation == AppRoutes.onboarding;
+      final goingToForgot =
+          state.matchedLocation == AppRoutes.forgotPassword;
+      final goingToReset =
+          state.matchedLocation == AppRoutes.resetPassword;
+
+      // The splash screen owns the route hand-off itself once its
+      // animation completes — never redirect away from it.
+      if (goingToSplash) return null;
+
+      // The reset-password screen is reached via the email recovery
+      // deep link. The user IS signed in at this point (Supabase
+      // exchanges the recovery token for a session), but we must let
+      // them set a new password before pushing them into the app.
+      if (goingToReset) return null;
+
+      // Forgot-password is reachable while signed out so users who
+      // can't get in can still recover.
+      if (goingToForgot) return null;
 
       if (!isSignedIn && !goingToSignIn) return AppRoutes.signIn;
-      if (isSignedIn && goingToSignIn) return AppRoutes.feed;
+      if (isSignedIn && goingToSignIn) return AppRoutes.home;
+
+      // After sign-in, send users that haven't finished onboarding to
+      // the onboarding flow. We only redirect if the profile has loaded
+      // and is missing the completed-at timestamp; while it's loading we
+      // let the user through (they'll be re-evaluated when the profile
+      // resolves via the AuthRefreshNotifier listening to myProfileProvider).
+      if (isSignedIn && !goingToOnboarding) {
+        final profile = ref.read(myProfileProvider).valueOrNull;
+        if (profile != null && !profile.hasCompletedOnboarding) {
+          return AppRoutes.onboarding;
+        }
+      }
+
+      // Don't keep them on /onboarding after they've completed it.
+      if (goingToOnboarding) {
+        final profile = ref.read(myProfileProvider).valueOrNull;
+        if (profile != null && profile.hasCompletedOnboarding) {
+          return AppRoutes.home;
+        }
+      }
       return null;
     },
     routes: [
+      GoRoute(
+        path: AppRoutes.splash,
+        builder: (_, __) => const SplashScreen(),
+      ),
       GoRoute(
         path: AppRoutes.signIn,
         builder: (_, __) => const SignInScreen(),
       ),
       GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (_, __) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.resetPassword,
+        builder: (_, __) => const ResetPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (_, __) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/me/edit',
+        builder: (_, __) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/me/notifications',
+        builder: (_, __) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/me/notifications/preferences',
+        builder: (_, __) => const NotificationPreferencesScreen(),
+      ),
+      GoRoute(
+        path: '/me/settings',
+        builder: (_, __) => const SettingsScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.logCatch,
         builder: (_, __) => const CatchLogScreen(),
+      ),
+      GoRoute(
+        path: '/catches/:id',
+        builder: (_, state) =>
+            CatchDetailScreen(catchId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/profile/:userId',
+        builder: (_, state) =>
+            ProfileScreen(userId: state.pathParameters['userId']!),
+      ),
+      GoRoute(
+        path: '/trips/:id',
+        builder: (_, state) =>
+            TripDetailScreen(tripId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/tournaments/:id',
+        builder: (_, state) => TournamentDetailScreen(
+          tournamentId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/tournaments/:id/anglers/:anglerId',
+        builder: (_, state) => AnglerEntriesScreen(
+          tournamentId: state.pathParameters['id']!,
+          anglerId: state.pathParameters['anglerId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/celebrate/:catchId',
+        builder: (_, state) => CelebrationScreen(
+          catchId: state.pathParameters['catchId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/year-in-review',
+        builder: (_, __) => const YearInReviewScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
           GoRoute(
-            path: AppRoutes.feed,
-            builder: (_, __) => const FeedScreen(),
+            path: AppRoutes.home,
+            builder: (_, __) => const HomeScreen(),
           ),
           GoRoute(
             path: AppRoutes.catches,
             builder: (_, __) => const CatchesScreen(),
           ),
           GoRoute(
-            path: AppRoutes.tournaments,
+            path: AppRoutes.stats,
+            builder: (_, __) => const StatsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.tourneys,
             builder: (_, __) => const TournamentsScreen(),
           ),
           GoRoute(
-            path: AppRoutes.profile,
-            builder: (_, __) => const ProfileScreen(),
+            path: AppRoutes.map,
+            builder: (_, __) => const MapScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.friends,
+            builder: (_, __) => const FriendsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.me,
+            builder: (_, __) => const MeScreen(),
           ),
         ],
       ),
@@ -73,18 +223,26 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 class _AuthRefreshNotifier extends ChangeNotifier {
   _AuthRefreshNotifier(this._ref) {
-    _sub = _ref.listen<AsyncValue<dynamic>>(
+    _authSub = _ref.listen<AsyncValue<dynamic>>(
       authStateChangesProvider,
+      (_, __) => notifyListeners(),
+    );
+    // Re-evaluate redirects when the user's profile loads or its
+    // onboarding-completed timestamp flips.
+    _profileSub = _ref.listen<AsyncValue<dynamic>>(
+      myProfileProvider,
       (_, __) => notifyListeners(),
     );
   }
 
   final Ref _ref;
-  late final ProviderSubscription<AsyncValue<dynamic>> _sub;
+  late final ProviderSubscription<AsyncValue<dynamic>> _authSub;
+  late final ProviderSubscription<AsyncValue<dynamic>> _profileSub;
 
   @override
   void dispose() {
-    _sub.close();
+    _authSub.close();
+    _profileSub.close();
     super.dispose();
   }
 }
