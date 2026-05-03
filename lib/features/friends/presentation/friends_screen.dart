@@ -123,7 +123,8 @@ class _Body extends ConsumerWidget {
               currentUserId: user?.id ?? '',
               profile: bundle.profilesById[f.otherSide(user?.id ?? '')],
             ),
-        const SizedBox(height: AppSpacing.xxl),
+        // Bottom-nav clearance (extendBody:true on the shell scaffold).
+        SizedBox(height: 88 + MediaQuery.viewPaddingOf(context).bottom),
       ],
     );
   }

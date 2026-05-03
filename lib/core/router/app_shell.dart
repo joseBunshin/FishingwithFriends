@@ -159,6 +159,9 @@ class _NavItem extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               tab.label,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.fade,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
