@@ -9,6 +9,7 @@ import 'package:fishing_with_friends/features/friends/data/friends_repository.da
 import 'package:fishing_with_friends/features/friends/data/friends_repository_provider.dart';
 import 'package:fishing_with_friends/features/friends/domain/friendship.dart';
 import 'package:fishing_with_friends/features/friends/domain/profile.dart';
+import 'package:fishing_with_friends/features/profile/data/my_profile_repository_provider.dart';
 import 'package:fishing_with_friends/features/profile/presentation/widgets/avatar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -53,7 +54,13 @@ class _Body extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    final username = user?.email?.split('@').first ?? 'angler';
+    // Prefer the authoritative profile.handle so edits made via the
+    // Edit Profile screen reflect here. Fall back to the email-local-part
+    // only while the profile is still loading or absent (first-launch
+    // edge cases) so the card never renders empty.
+    final profile = ref.watch(myProfileProvider).valueOrNull;
+    final emailFallback = user?.email?.split('@').first ?? 'angler';
+    final handle = profile?.handle ?? '@$emailFallback';
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -62,7 +69,7 @@ class _Body extends ConsumerWidget {
         const SizedBox(height: AppSpacing.lg),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          child: _UsernameCard(username: '@$username'),
+          child: _UsernameCard(username: handle),
         ),
         const SizedBox(height: AppSpacing.xl),
         const Padding(
