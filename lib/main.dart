@@ -20,6 +20,17 @@ Future<void> main() async {
   await Supabase.initialize(
     url: Env.supabaseUrl,
     anonKey: Env.supabaseAnonKey,
+    // Implicit flow for password recovery + signup confirmation. PKCE
+    // (the new supabase_flutter default) requires the code_verifier to
+    // be on the same device that exchanges the code — but our recovery
+    // links open in the iOS Safari browser, not the Flutter app, so the
+    // verifier was always missing and exchangeCodeForSession failed
+    // with what looked like "Link expired." Implicit flow puts the
+    // access_token in the URL fragment directly so the GitHub Pages
+    // landing can call setSession + updateUser without a verifier.
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.implicit,
+    ),
   );
 
   // Firebase init runs in the background — main() does NOT await it.
