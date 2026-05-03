@@ -291,6 +291,11 @@ def main():
     )
     page_from_md(
         deploy_id,
+        "iOS capabilities & ASC declarations",
+        deploy_dir / "ios-capabilities.md",
+    )
+    page_from_md(
+        deploy_id,
         "Android — Google Play deployment",
         deploy_dir / "android.md",
     )
