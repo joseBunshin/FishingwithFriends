@@ -40,7 +40,9 @@ class _ForgotPasswordScreenState
             // Pages handler (#type=recovery → "Open the app" card). The
             // trailing slash MUST match the Supabase Auth → URL
             // Configuration → Redirect URLs entry exactly.
-            redirectTo: 'https://josebunshin.github.io/fishingwithfriends/',
+            // GitHub Pages serves at the case-sensitive repo path. Repo
+            // is named FishingwithFriends (capital F); lowercase 404s.
+            redirectTo: 'https://josebunshin.github.io/FishingwithFriends/',
           );
       if (!mounted) return;
       setState(() => _sent = true);
