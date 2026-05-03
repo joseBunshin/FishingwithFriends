@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:fishing_with_friends/features/storytelling/application/share_card_export.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
