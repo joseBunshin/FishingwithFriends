@@ -266,6 +266,7 @@
           This link can't be used. It may have expired (recovery links
           last one hour) or already been redeemed.
         </p>
+        <p id="card-error-detail" class="form-error hidden"></p>
         <p>
           Open Fishing with Friends and try again, or contact
           <a href="mailto:jose.diaz@bunshin.io">jose.diaz@bunshin.io</a>
@@ -307,6 +308,22 @@
         var el = document.getElementById(cardId);
         if (el) el.classList.toggle('hidden', cardId !== id);
       });
+    }
+
+    // Show the error card with the actual Supabase error message in
+    // the diagnostic block. Without this we just say "Link expired"
+    // for everything, which made it impossible to tell PKCE-verifier
+    // mismatches apart from genuinely-consumed links during testing.
+    function showErrorCard(detail) {
+      showCard('card-error');
+      var el = document.getElementById('card-error-detail');
+      if (!el) return;
+      if (detail && detail.length > 0) {
+        el.textContent = detail;
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
     }
 
     // Supabase appends auth context to the URL after a token verify.
@@ -380,12 +397,12 @@
 
       sb.auth.exchangeCodeForSession(code).then(function (res) {
         if (res.error) {
-          showCard('card-error');
+          showErrorCard(res.error.message);
           return;
         }
         attachSubmitHandler(sb);
-      }).catch(function () {
-        showCard('card-error');
+      }).catch(function (err) {
+        showErrorCard((err && err.message) || 'Unknown error');
       });
     }
 
@@ -408,12 +425,12 @@
         refresh_token: refreshToken,
       }).then(function (res) {
         if (res.error) {
-          showCard('card-error');
+          showErrorCard(res.error.message);
           return;
         }
         attachSubmitHandler(sb);
-      }).catch(function () {
-        showCard('card-error');
+      }).catch(function (err) {
+        showErrorCard((err && err.message) || 'Unknown error');
       });
     }
 
