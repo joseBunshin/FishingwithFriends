@@ -57,7 +57,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           // to whatever Site URL is set in the dashboard, which is brittle.
           // The trailing slash MUST match the entry in Auth → URL
           // Configuration → Redirect URLs.
-          emailRedirectTo: 'https://josebunshin.github.io/fishingwithfriends/',
+          // GitHub Pages serves at the case-sensitive repo path. Repo is
+          // named FishingwithFriends (capital F); lowercase 404s.
+          emailRedirectTo: 'https://josebunshin.github.io/FishingwithFriends/',
         );
         if (!mounted) return;
         // Supabase returns a session-less user when email confirmation
