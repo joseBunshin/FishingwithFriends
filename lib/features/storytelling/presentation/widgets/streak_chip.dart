@@ -11,12 +11,13 @@ class StreakChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncStreak = ref.watch(streakProvider);
     return asyncStreak.when(
-      loading: () => const _Pill(label: '— day streak', longest: null),
+      loading: () => const _Pill(label: '— day fishing streak', longest: null),
       error: (_, __) => const SizedBox.shrink(),
       data: (s) {
         if (s.current == 0 && s.longest == 0) return const SizedBox.shrink();
+        // "fishing" qualifier disambiguates from logins / trips / app-opens.
         return _Pill(
-          label: '${s.current}-day streak',
+          label: '${s.current}-day fishing streak',
           longest: s.longest,
         );
       },
@@ -64,9 +65,18 @@ class _Pill extends StatelessWidget {
         ),
         if (longest != null && longest! > 0) ...[
           const SizedBox(height: AppSpacing.xxs),
+          // Mist-on-navy uppercase kicker matches the rest of the
+          // navy hero strip's muted-text language. The original
+          // bodySmall + onSurface (near-black) read as muted dirt
+          // against the navy background — the bug-batch-4 U1 fix.
           Text(
-            'longest ${longest}d',
-            style: Theme.of(context).textTheme.bodySmall,
+            'LONGEST · $longest ${longest == 1 ? 'DAY' : 'DAYS'}',
+            style: const TextStyle(
+              color: AppColors.mist,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+            ),
           ),
         ],
       ],
