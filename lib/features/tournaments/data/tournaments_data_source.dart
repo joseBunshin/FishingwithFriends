@@ -1,3 +1,5 @@
+import 'package:fishing_with_friends/core/error/app_exception.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class TournamentsDataSource {
@@ -94,7 +96,24 @@ class SupabaseTournamentsDataSource implements TournamentsDataSource {
 
   @override
   Future<void> deleteTournament(String tournamentId) async {
-    await _client.from('tournaments').delete().eq('id', tournamentId);
+    // .select('id') chained so a silently-denied delete (RLS returns
+    // zero affected rows with no exception) surfaces as a thrown
+    // NetworkFailure rather than a fake-success that leaves the
+    // tournament live for participants. Scoped to the id column.
+    final rows = await _client
+        .from('tournaments')
+        .delete()
+        .eq('id', tournamentId)
+        .select('id');
+    if (rows.isEmpty) {
+      debugPrint(
+        'tournaments-delete: zero rows affected for id=$tournamentId; '
+        'RLS denial or stale session',
+      );
+      throw const NetworkFailure(
+        "Couldn't delete that tournament. Try again.",
+      );
+    }
   }
 
   @override

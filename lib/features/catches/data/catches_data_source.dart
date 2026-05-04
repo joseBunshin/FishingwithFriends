@@ -1,3 +1,5 @@
+import 'package:fishing_with_friends/core/error/app_exception.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Thin Supabase Postgrest wrapper for the `catches` table and
@@ -90,6 +92,24 @@ class SupabaseCatchesDataSource implements CatchesDataSource {
 
   @override
   Future<void> deleteCatch(String id) async {
-    await _client.from('catches').delete().eq('id', id);
+    // .select('id') chained so a silently-denied delete (RLS returns
+    // zero affected rows with no exception) surfaces as a thrown
+    // NetworkFailure rather than a fake-success that leaves the catch
+    // on the user's feed. Scoped to the id column to avoid pulling
+    // the full catch row over the wire on every successful delete.
+    final rows = await _client
+        .from('catches')
+        .delete()
+        .eq('id', id)
+        .select('id');
+    if (rows.isEmpty) {
+      debugPrint(
+        'catches-delete: zero rows affected for id=$id; '
+        'RLS denial or stale session',
+      );
+      throw const NetworkFailure(
+        "Couldn't delete that catch. Try again.",
+      );
+    }
   }
 }
