@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fishing_with_friends/core/theme/app_colors.dart';
@@ -13,20 +13,26 @@ class ShareCard extends StatelessWidget {
   const ShareCard({
     required this.catch_,
     required this.photoUrl,
-    this.photoBytes,
+    this.photoImage,
     super.key,
   });
 
   final Catch catch_;
 
-  /// Signed URL for the cover photo, or null when unavailable.
-  /// When null the card renders a navy fallback panel in place of the photo.
+  /// Signed URL for the cover photo, or null when unavailable. Used by
+  /// the on-screen preview path (inside a normal Material tree where
+  /// CachedNetworkImage's async decode is fine). The offscreen export
+  /// path uses [photoImage] instead and passes null here so it cannot
+  /// silently fall through to the racing CachedNetworkImage path.
   final String? photoUrl;
 
-  /// Pre-fetched photo bytes. When set, the card renders synchronously
-  /// from memory instead of racing the network. The exporter pre-warms
-  /// this so the offscreen capture isn't a blank navy panel.
-  final Uint8List? photoBytes;
+  /// Pre-decoded `ui.Image` for the cover photo. When non-null the card
+  /// renders via `RawImage` — `ui.Image` is already a GPU-side resource
+  /// so `flushPaint()` paints synchronously. This eliminates the race
+  /// the prior `Image.memory(bytes)` path produced inside the offscreen
+  /// `RepaintBoundary` capture pipeline (where `pumpAndSettle` is not
+  /// available to await the codec's async decode).
+  final ui.Image? photoImage;
 
   static const double width = 1080;
   static const double height = 1920;
@@ -43,7 +49,7 @@ class ShareCard extends StatelessWidget {
           children: [
             Expanded(
               flex: 6,
-              child: _Photo(photoUrl: photoUrl, photoBytes: photoBytes),
+              child: _Photo(photoUrl: photoUrl, photoImage: photoImage),
             ),
             Expanded(
               flex: 4,
@@ -57,20 +63,17 @@ class ShareCard extends StatelessWidget {
 }
 
 class _Photo extends StatelessWidget {
-  const _Photo({this.photoUrl, this.photoBytes});
+  const _Photo({this.photoUrl, this.photoImage});
   final String? photoUrl;
-  final Uint8List? photoBytes;
+  final ui.Image? photoImage;
 
   @override
   Widget build(BuildContext context) {
-    // Prefer pre-fetched bytes (offscreen capture path) — synchronous
-    // and avoids the placeholder race against `toImage()`.
-    if (photoBytes != null) {
-      return Image.memory(
-        photoBytes!,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const _PhotoFallback(),
-      );
+    // Prefer the pre-decoded ui.Image (offscreen export path) —
+    // RawImage paints from a GPU-side resource synchronously, no
+    // codec race with toImage().
+    if (photoImage != null) {
+      return RawImage(image: photoImage, fit: BoxFit.cover);
     }
     if (photoUrl == null) {
       return const _PhotoFallback();
