@@ -7,6 +7,7 @@ import 'package:fishing_with_friends/features/feed/domain/feed_item.dart';
 import 'package:fishing_with_friends/features/home/data/home_metrics_provider.dart';
 import 'package:fishing_with_friends/features/home/domain/home_metrics.dart';
 import 'package:fishing_with_friends/features/home/presentation/home_screen.dart';
+import 'package:fishing_with_friends/features/notifications/data/notifications_repository_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +16,7 @@ import 'package:go_router/go_router.dart';
 Widget _wrap({
   required AsyncValue<HomeMetrics> metrics,
   AsyncValue<List<FeedItem>> feed = const AsyncData<List<FeedItem>>([]),
+  int unread = 0,
 }) {
   final router = GoRouter(
     initialLocation: '/home',
@@ -32,6 +34,10 @@ Widget _wrap({
         path: '/friends',
         builder: (_, __) => const Scaffold(body: Text('friends screen')),
       ),
+      GoRoute(
+        path: '/me/notifications',
+        builder: (_, __) => const Scaffold(body: Text('notifications screen')),
+      ),
     ],
   );
 
@@ -46,6 +52,10 @@ Widget _wrap({
           error: Future<List<FeedItem>>.error,
         );
       }),
+      // Stub the synchronous unread provider with a fixed value. Real
+      // implementation derives it from myNotificationsProvider — we
+      // bypass that whole chain since the bell only watches the count.
+      unreadNotificationCountProvider.overrideWithValue(unread),
     ],
     child: MaterialApp.router(
       theme: AppTheme.light(),
@@ -116,6 +126,44 @@ void main() {
 
       expect(find.text("Couldn't load your activity feed."), findsOneWidget);
       expect(find.widgetWithText(TextButton, 'Retry'), findsOneWidget);
+    });
+
+    // Bug-batch-4 U2: AppBar notifications bell + unread dot.
+    testWidgets('bell renders without dot when unread = 0', (tester) async {
+      await tester.pumpWidget(
+        _wrap(metrics: const AsyncData(HomeMetrics.empty())),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
+      expect(find.byKey(const Key('home-notifications-dot')), findsNothing);
+    });
+
+    testWidgets('bell renders with orange dot when unread > 0',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(metrics: const AsyncData(HomeMetrics.empty()), unread: 3),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
+      expect(
+        find.byKey(const Key('home-notifications-dot')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('tapping the bell navigates to /me/notifications',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(metrics: const AsyncData(HomeMetrics.empty())),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.notifications_outlined));
+      await tester.pumpAndSettle();
+
+      expect(find.text('notifications screen'), findsOneWidget);
     });
   });
 }

@@ -1,5 +1,6 @@
 import 'package:fishing_with_friends/core/router/app_router.dart';
 import 'package:fishing_with_friends/core/supabase/supabase_providers.dart';
+import 'package:fishing_with_friends/core/theme/app_colors.dart';
 import 'package:fishing_with_friends/core/theme/app_spacing.dart';
 import 'package:fishing_with_friends/core/units/measurement_format.dart';
 import 'package:fishing_with_friends/core/widgets/section_label.dart';
@@ -10,6 +11,7 @@ import 'package:fishing_with_friends/features/home/data/home_metrics_provider.da
 import 'package:fishing_with_friends/features/home/domain/home_metrics.dart';
 import 'package:fishing_with_friends/features/home/presentation/widgets/action_chips.dart';
 import 'package:fishing_with_friends/features/home/presentation/widgets/stat_tile.dart';
+import 'package:fishing_with_friends/features/notifications/data/notifications_repository_provider.dart';
 import 'package:fishing_with_friends/features/settings/data/app_preferences.dart';
 import 'package:fishing_with_friends/features/sync/presentation/widgets/sync_pill.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +31,7 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
-        actions: const [SyncPill()],
+        actions: const [_NotificationsBell(), SyncPill()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -249,6 +251,58 @@ class _ActivityError extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// AppBar bell with an orange-dot indicator when there are unread
+/// notifications. Tap routes to the existing /me/notifications screen.
+/// `unreadNotificationCountProvider` is a synchronous `Provider<int>` that
+/// returns 0 during loading or error of the underlying notifications
+/// stream — so the dot only renders when AsyncData has confirmed a
+/// non-zero count, no special UI handling needed for transient states.
+class _NotificationsBell extends ConsumerWidget {
+  const _NotificationsBell();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(unreadNotificationCountProvider);
+    final hasUnread = unread > 0;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          tooltip: hasUnread
+              ? 'Notifications ($unread unread)'
+              : 'Notifications',
+          onPressed: () => context.push('/me/notifications'),
+        ),
+        if (hasUnread)
+          const Positioned(
+            top: 10,
+            right: 10,
+            child: IgnorePointer(
+              child: _OrangeDot(key: Key('home-notifications-dot')),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _OrangeDot extends StatelessWidget {
+  const _OrangeDot({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: const BoxDecoration(
+        color: AppColors.orange,
+        shape: BoxShape.circle,
       ),
     );
   }
